@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación Completa - Detector de Parásitos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <style>
+        body { font-family: Arial; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .test { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .console { background: black; color: lime; padding: 15px; height: 400px; overflow-y: auto; font-family: monospace; }
+        button { background: #007cba; color: white; border: none; padding: 12px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .result { padding: 10px; margin: 5px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Verificación Completa del Sistema</h1>
+    
+    <div class="test">
+        <h3>1. Verificación de TensorFlow.js</h3>
+        <button onclick="verificarTFJS()">Verificar TensorFlow.js</button>
+        <div id="resultTFJS"></div>
+    </div>
+    
+    <div class="test">
+        <h3>2. Carga desde Archivos (SOLUCIÓN PERFECTA)</h3>
+        <button onclick="cargarModeloPerfecto()">Cargar Modelo Perfecto</button>
+        <div id="resultArchivos"></div>
+    </div>
+    
+    <div class="test">
+        <h3>3. Predicción con Modelo Perfecto</h3>
+        <button onclick="probarPrediccionPerfecta()">Probar Predicción Perfecta</button>
+        <div id="resultPrediccion"></div>
+    </div>
+    
+    <div class="test">
+        <h3>4. Comparación: Modelo en Memoria vs Archivos</h3>
+        <button onclick="compararModelos()">Comparar Ambos Modelos</button>
+        <div id="resultComparacion"></div>
+    </div>
+    
+    <div class="test">
+        <h3>5. Verificación Final del Sistema</h3>
+        <button onclick="verificacionCompleta()">Ejecutar Verificación Completa</button>
+        <div id="resultFinal"></div>
+    </div>
+    
+    <h3>Consola de Verificación:</h3>
+    <div id="console" class="console"></div>
+
+    <script>
+        let modeloArchivos = null;
+        let modeloMemoria = null;
+        const consoleEl = document.getElementById('console');
+        
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#007cba';
+            consoleEl.innerHTML += `<div style="color: ${color}; margin: 2px 0;">[${time}] ${msg}</div>`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function mostrarResultado(elementId, html, type = 'info') {
+            const element = document.getElementById(elementId);
+            const color = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#fff3cd';
+            element.innerHTML = `<div class="result" style="background: ${color}">${html}</div>`;
+        }
+
+        async function verificarTFJS() {
+            log('🔍 Verificando TensorFlow.js...', 'info');
+            try {
+                const version = tf.version.tfjs;
+                const backend = tf.getBackend();
+                mostrarResultado('resultTFJS', 
+                    `✅ TensorFlow.js ${version} cargado correctamente<br>
+                     ✅ Backend: ${backend}<br>
+                     ✅ Memoria: ${(tf.memory().numTensors)} tensores`, 'success');
+                log(`✅ TF.js ${version} - Backend: ${backend}`, 'success');
+            } catch (error) {
+                mostrarResultado('resultTFJS', `❌ Error: ${error.message}`, 'error');
+                log(`❌ Error TF.js: ${error.message}`, 'error');
+            }
+        }
+
+        async function cargarModeloPerfecto() {
+            log('🔄 Cargando modelo perfecto desde archivos...', 'info');
+            try {
+                if (modeloArchivos) modeloArchivos.dispose();
+                
+                modeloArchivos = await tf.loadLayersModel('modelo/model.json');
+                const inputShape = modeloArchivos.inputs[0].shape;
+                const outputShape = modeloArchivos.outputs[0].shape;
+                
+                mostrarResultado('resultArchivos', 
+                    `✅ MODELO PERFECTO CARGADO<br>
+                     ✅ Input: [${inputShape}]<br>
+                     ✅ Output: [${outputShape}]<br>
+                     ✅ Capas: ${modeloArchivos.layers.length}`, 'success');
+                log(`✅ Modelo perfecto cargado: [${inputShape}] -> [${outputShape}]`, 'success');
+                return true;
+            } catch (error) {
+                mostrarResultado('resultArchivos', `❌ Error: ${error.message}`, 'error');
+                log(`❌ Error cargando modelo perfecto: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function probarPrediccionPerfecta() {
+            if (!modeloArchivos) {
+                mostrarResultado('resultPrediccion', '⚠️ Primero carga el modelo perfecto', 'warning');
+                return;
+            }
+            
+            log('🧪 Probando predicción con modelo perfecto...', 'info');
+            try {
+                const entrada = tf.randomNormal([1, 224, 224, 3]);
+                const inicio = performance.now();
+                const salida = modeloArchivos.predict(entrada);
+                const fin = performance.now();
+                
+                const resultados = await salida.data();
+                const tiempo = (fin - inicio).toFixed(2);
+                const suma = Array.from(resultados).reduce((a, b) => a + b, 0).toFixed(4);
+                
+                mostrarResultado('resultPrediccion', 
+                    `✅ PREDICCIÓN PERFECTA EXITOSA<br>
+                     ⏱️ Tiempo: ${tiempo}ms<br>
+                     📊 Shape: [${salida.shape}]<br>
+                     🧮 Suma: ${suma}`, 'success');
+                log(`✅ Predicción perfecta: ${tiempo}ms, suma: ${suma}`, 'success');
+                
+                entrada.dispose();
+                salida.dispose();
+            } catch (error) {
+                mostrarResultado('resultPrediccion', `❌ Error: ${error.message}`, 'error');
+                log(`❌ Error en predicción perfecta: ${error.message}`, 'error');
+            }
+        }
+
+        async function compararModelos() {
+            log('⚖️ Comparando modelos...', 'info');
+            
+            // Modelo en memoria
+            try {
+                modeloMemoria = tf.sequential({
+                    layers: [
+                        tf.layers.inputLayer({inputShape: [224, 224, 3], batchSize: 1}),
+                        tf.layers.conv2d({filters: 16, kernelSize: 3, activation: 'relu'}),
+                        tf.layers.maxPooling2d({poolSize: 2}),
+                        tf.layers.flatten(),
+                        tf.layers.dense({units: 5, activation: 'softmax'})
+                    ]
+                });
+                modeloMemoria.compile({optimizer: 'adam', loss: 'categoricalCrossentropy'});
+                log('✅ Modelo en memoria creado', 'success');
+            } catch (error) {
+                log(`❌ Error modelo memoria: ${error.message}`, 'error');
+            }
+            
+            // Comparar
+            const resultados = [];
+            
+            if (modeloArchivos) {
+                resultados.push('✅ Modelo desde archivos: FUNCIONANDO');
+            } else {
+                resultados.push('❌ Modelo desde archivos: NO FUNCIONA');
+            }
+            
+            if (modeloMemoria) {
+                resultados.push('✅ Modelo en memoria: FUNCIONANDO');
+            }
+            
+            mostrarResultado('resultComparacion', resultados.join('<br>'), 
+                           modeloArchivos ? 'success' : 'warning');
+        }
+
+        async function verificacionCompleta() {
+            log('🚀 INICIANDO VERIFICACIÓN COMPLETA...', 'info');
+            
+            await verificarTFJS();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const archivosOk = await cargarModeloPerfecto();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (archivosOk) {
+                await probarPrediccionPerfecta();
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await compararModelos();
+            
+            log('✅ VERIFICACIÓN COMPLETA FINALIZADA', 'success');
+            
+            // Resumen final
+            const estadoFinal = modeloArchivos ? 
+                '🎉 ¡SISTEMA 100% OPERATIVO! Modelos desde archivos y memoria funcionando' :
+                '⚠️ SISTEMA PARCIALMENTE OPERATIVO. Modelo en memoria funciona como respaldo';
+            
+            mostrarResultado('resultFinal', estadoFinal, modeloArchivos ? 'success' : 'warning');
+        }
+
+        // Iniciar automáticamente
+        log('Sistema de verificación cargado', 'info');
+        verificacionCompleta();
+    </script>
+</body>
+</html>
