@@ -1,125 +1,240 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detector de Parásitos - IA</title>
-    
-    <!-- ✅ AGREGAMOS TENSORFLOW.JS - DÍA 3 -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-    
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         .container {
             background: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         h1 {
             color: #2c3e50;
             text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
         }
         .upload-area {
-            border: 2px dashed #3498db;
+            border: 3px dashed #3498db;
             padding: 40px;
             text-align: center;
             margin: 20px 0;
             border-radius: 10px;
             background-color: #ecf0f1;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #2980b9;
+            background-color: #d6eaf8;
+        }
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background-color: #d5f4e6;
         }
         button {
-            background-color: #3498db;
+            background: linear-gradient(45deg, #3498db, #2980b9);
             color: white;
-            padding: 12px 24px;
+            padding: 15px 30px;
             border: none;
-            border-radius: 5px;
+            border-radius: 25px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
         }
         button:hover {
-            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         button:disabled {
-            background-color: #bdc3c7;
+            background: #bdc3c7;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
             text-align: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
         .loading {
-            background-color: #fff3cd;
+            background: #fff3cd;
             color: #856404;
+            border-left: 5px solid #ffc107;
         }
         .success {
-            background-color: #d1ecf1;
+            background: #d1ecf1;
             color: #0c5460;
+            border-left: 5px solid #17a2b8;
         }
         .error {
-            background-color: #f8d7da;
+            background: #f8d7da;
             color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #28a745;
+        }
+        .parasite-result {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 5px solid #ffc107;
+        }
+        .confidence-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            height: 20px;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        .image-preview {
+            max-width: 300px;
+            border-radius: 10px;
+            margin: 15px auto;
+            display: block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .class-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .class-name {
+            font-weight: bold;
+        }
+        .class-prob {
+            color: #3498db;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔬 Detector de Parásitos con IA</h1>
-        <p>Sube una imagen de un parásito para analizarlo</p>
+        <p class="subtitle">Sube una imagen de un parásito para analizarlo con inteligencia artificial</p>
         
-        <!-- ✅ AGREGAMOS ESTADO DE TENSORFLOW.JS - DÍA 3 -->
-        <div id="tfjsStatus" class="status">
-            TensorFlow.js: Cargando...
+        <!-- Estado del sistema -->
+        <div id="systemStatus" class="status loading">
+            🔄 Inicializando sistema de IA...
         </div>
-        
-        <div class="upload-area">
-            <input type="file" id="imageUpload" accept="image/*" disabled>
-            <br><br>
-            <button onclick="analyzeImage()" id="analyzeBtn" disabled>Analizar Imagen</button>
+
+        <!-- Área de subida de imágenes -->
+        <div class="upload-area" id="uploadArea">
+            <h3>📤 Sube tu imagen aquí</h3>
+            <p>Arrastra una imagen o haz clic para seleccionar</p>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+            <button onclick="document.getElementById('imageUpload').click()">Seleccionar Imagen</button>
+            <p><small>Formatos soportados: JPG, PNG, GIF</small></p>
         </div>
-        
+
+        <!-- Botón de análisis -->
+        <div style="text-align: center;">
+            <button onclick="analyzeImage()" id="analyzeBtn" disabled>🔍 Analizar Imagen con IA</button>
+            <button onclick="clearResults()" id="clearBtn">🗑️ Limpiar</button>
+        </div>
+
+        <!-- Resultados -->
         <div id="result"></div>
+
+        <!-- Información del modelo -->
+        <div class="result" style="margin-top: 30px;">
+            <h3>ℹ️ Información del Sistema</h3>
+            <p><strong>Modelo:</strong> Red Neuronal Convolucional (CNN)</p>
+            <p><strong>Precisión:</strong> 19%</p>
+            <p><strong>Clases detectadas:</strong> 5 tipos de parásitos</p>
+            <p><strong>Tecnología:</strong> TensorFlow.js en navegador</p>
+        </div>
     </div>
 
     <script>
-        // ✅ DÍA 3: CÓDIGO PARA TENSORFLOW.JS
-        
-        // Variable global para el modelo (lo cargaremos después)
-        let modeloIA = null;
-        
-        // Función para verificar si TensorFlow.js está listo
-        function verificarTensorFlowJS() {
-            const statusElement = document.getElementById('tfjsStatus');
-            
-            if (typeof tf !== 'undefined') {
-                statusElement.innerHTML = '✅ TensorFlow.js: CARGADO CORRECTAMENTE';
-                statusElement.className = 'status success';
+        // Variables globales
+        let modelo = null;
+        let imagenActual = null;
+
+        // Nombres de las clases (parásitos)
+        const clasesParasitos = {
+            '0': 'Ascaris lumbricoides',
+            '1': 'Trichuris trichiura',
+            '2': 'Ancylostoma duodenale',
+            '3': 'Giardia lamblia', 
+            '4': 'Entamoeba histolytica'
+        };
+
+        // Función para actualizar estado del sistema
+        function actualizarEstado(mensaje, tipo) {
+            const status = document.getElementById('systemStatus');
+            status.textContent = mensaje;
+            status.className = `status ${tipo}`;
+        }
+
+        // Función para cargar el modelo de IA
+        async function cargarModelo() {
+            try {
+                actualizarEstado('🔄 Cargando modelo de IA...', 'loading');
                 
-                // Habilitar el botón y input de archivo
-                document.getElementById('imageUpload').disabled = false;
+                // Cargar el modelo entrenado
+                modelo = await tf.loadLayersModel('modelo/model.json');
+                
+                actualizarEstado('✅ Sistema de IA listo - Modelo cargado correctamente', 'success');
                 document.getElementById('analyzeBtn').disabled = false;
                 
-                console.log("✅ TensorFlow.js está listo para usar");
-                console.log("Versión de TensorFlow.js:", tf.version.tfjs);
+                console.log('✅ Modelo cargado:', modelo);
                 
-            } else {
-                statusElement.innerHTML = '❌ TensorFlow.js: ERROR al cargar';
-                statusElement.className = 'status error';
-                console.error("❌ TensorFlow.js no se cargó correctamente");
+            } catch (error) {
+                actualizarEstado('❌ Error cargando el modelo: ' + error.message, 'error');
+                console.error('Error cargando modelo:', error);
             }
         }
-        
-        // Función para analizar imagen (MEJORADA - DÍA 3)
-        function analyzeImage() {
+
+        // Función para preprocesar imagen
+        function preprocesarImagen(imgElement) {
+            // Convertir imagen a tensor
+            return tf.tidy(() => {
+                const tensor = tf.browser.fromPixels(imgElement)
+                    .resizeNearestNeighbor([224, 224])  // Tamaño que espera el modelo
+                    .toFloat()
+                    .div(255.0)  // Normalizar a [0,1]
+                    .expandDims(0);  // Agregar dimensión batch
+                
+                return tensor;
+            });
+        }
+
+        // Función principal para analizar imagen
+        async function analyzeImage() {
             const input = document.getElementById('imageUpload');
             const resultDiv = document.getElementById('result');
             
@@ -128,47 +243,149 @@
                 return;
             }
             
-            if (typeof tf === 'undefined') {
-                resultDiv.innerHTML = '<div class="status error">❌ TensorFlow.js no está cargado. Recarga la página.</div>';
+            if (!modelo) {
+                resultDiv.innerHTML = '<div class="status error">❌ El modelo de IA no está cargado</div>';
                 return;
             }
-            
+
             const file = input.files[0];
             const reader = new FileReader();
             
-            reader.onload = function(e) {
-                resultDiv.innerHTML = `
-                    <div class="status loading">
-                        🔄 Analizando imagen con TensorFlow.js...
-                    </div>
-                    <div style="text-align: center; margin: 20px 0;">
-                        <img src="${e.target.result}" style="max-width: 300px; border-radius: 10px;">
-                    </div>
-                `;
-                
-                // Simular análisis (en próximos días conectaremos el modelo real)
-                setTimeout(() => {
+            reader.onload = async function(e) {
+                try {
+                    // Mostrar imagen y estado de procesamiento
                     resultDiv.innerHTML = `
-                        <div class="status success">
-                            ✅ Análisis completado con TensorFlow.js
+                        <div class="status loading">
+                            🔄 Procesando imagen con IA...
                         </div>
-                        <div style="text-align: center; margin: 20px 0;">
-                            <img src="${e.target.result}" style="max-width: 300px; border-radius: 10px;">
+                        <div style="text-align: center;">
+                            <img src="${e.target.result}" class="image-preview" alt="Imagen a analizar">
+                            <p><small>Imagen cargada - Analizando con red neuronal...</small></p>
                         </div>
-                        <h3>🔧 Función en desarrollo</h3>
-                        <p>TensorFlow.js está funcionando correctamente. En los próximos días conectaremos el modelo de IA real.</p>
-                        <p><strong>TensorFlow.js versión:</strong> ${tf.version.tfjs}</p>
                     `;
-                }, 2000);
+
+                    // Crear elemento imagen
+                    const img = new Image();
+                    img.src = e.target.result;
+                    
+                    await new Promise((resolve) => {
+                        img.onload = resolve;
+                    });
+
+                    // Preprocesar imagen
+                    const tensorImagen = preprocesarImagen(img);
+                    
+                    // Hacer predicción
+                    const prediccion = modelo.predict(tensorImagen);
+                    const resultados = await prediccion.data();
+                    
+                    // Mostrar resultados
+                    mostrarResultados(resultados, e.target.result);
+                    
+                    // Liberar memoria
+                    tensorImagen.dispose();
+                    prediccion.dispose();
+                    
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Error en el análisis: ${error.message}
+                        </div>
+                    `;
+                    console.error('Error en análisis:', error);
+                }
             };
             
             reader.readAsDataURL(file);
         }
-        
-        // ✅ Cuando la página termine de cargar, verificar TensorFlow.js
+
+        // Función para mostrar resultados
+        function mostrarResultados(resultados, imagenSrc) {
+            const resultDiv = document.getElementById('result');
+            
+            // Encontrar la clase con mayor probabilidad
+            const indiceMax = resultados.indexOf(Math.max(...resultados));
+            const parasitoDetectado = clasesParasitos[indiceMax];
+            const confianzaMax = resultados[indiceMax] * 100;
+            
+            // Crear HTML de resultados
+            let resultadosHTML = `
+                <div class="status success">
+                    ✅ Análisis completado - ${parasitoDetectado} detectado
+                </div>
+                
+                <div style="text-align: center;">
+                    <img src="${imagenSrc}" class="image-preview" alt="Resultado del análisis">
+                </div>
+                
+                <div class="parasite-result">
+                    <h3>🎯 Diagnóstico:</h3>
+                    <p><strong>Parásito detectado:</strong> ${parasitoDetectado}</p>
+                    <p><strong>Confianza:</strong> ${confianzaMax.toFixed(2)}%</p>
+                    
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${confianzaMax}%"></div>
+                    </div>
+                </div>
+                
+                <div class="result">
+                    <h3>📊 Probabilidades de todas las clases:</h3>
+            `;
+            
+            // Agregar todas las probabilidades
+            resultados.forEach((prob, index) => {
+                const porcentaje = (prob * 100).toFixed(2);
+                resultadosHTML += `
+                    <div class="class-result">
+                        <span class="class-name">${clasesParasitos[index]}</span>
+                        <span class="class-prob">${porcentaje}%</span>
+                    </div>
+                `;
+            });
+            
+            resultadosHTML += `</div>`;
+            
+            resultDiv.innerHTML = resultadosHTML;
+        }
+
+        // Función para limpiar resultados
+        function clearResults() {
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('imageUpload').value = '';
+            actualizarEstado('✅ Sistema listo - Selecciona una nueva imagen', 'success');
+        }
+
+        // Configurar arrastrar y soltar
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('imageUpload');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    // Simular cambio en el input
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
+        }
+
+        // Cuando la página carga
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("🔄 Iniciando verificación de TensorFlow.js...");
-            setTimeout(verificarTensorFlowJS, 1000);
+            setupDragAndDrop();
+            cargarModelo();
         });
     </script>
 </body>

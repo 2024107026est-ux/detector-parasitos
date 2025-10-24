@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Detector de Parásitos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="pruebas_automaticas.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            color: #2d3436;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 5px solid #ddd;
+        }
+        .test-pass {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        .test-fail {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .test-running {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button.success {
+            background: linear-gradient(45deg, #00b894, #00a085);
+        }
+        button.danger {
+            background: linear-gradient(45deg, #e17055, #d63031);
+        }
+        #console {
+            background: #2d3436;
+            color: #00b894;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .model-info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 5px solid #3498db;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .feature-card h4 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+        .feature-card p {
+            color: #7f8c8d;
+            margin: 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Sistema de Pruebas - Detector de Parásitos</h1>
+        <p class="subtitle">Prueba automática de todos los componentes del sistema con modelo GRANDE</p>
+        
+        <div class="model-info">
+            <h3>🚀 Información del Modelo</h3>
+            <p><strong>Tipo:</strong> Red Neuronal Convolucional (CNN) GRANDE</p>
+            <p><strong>Archivos:</strong> 43 shards - Modelo de alta capacidad</p>
+            <p><strong>Clases:</strong> 5 tipos de parásitos intestinales</p>
+            <p><strong>Tecnología:</strong> TensorFlow.js en navegador</p>
+        </div>
+
+        <div class="feature-list">
+            <div class="feature-card">
+                <h4>🔬 TensorFlow.js</h4>
+                <p>IA directamente en tu navegador</p>
+            </div>
+            <div class="feature-card">
+                <h4>🖼️ Procesamiento</h4>
+                <p>Análisis de imágenes en tiempo real</p>
+            </div>
+            <div class="feature-card">
+                <h4>📊 Modelo Grande</h4>
+                <p>43 shards para máxima precisión</p>
+            </div>
+            <div class="feature-card">
+                <h4>🎯 5 Parásitos</h4>
+                <p>Detección de múltiples tipos</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="iniciarPruebas()" class="success">🚀 Ejecutar Pruebas Automáticas</button>
+            <button onclick="limpiarConsola()">🗑️ Limpiar Consola</button>
+            <button onclick="irAPaginaPrincipal()">🌐 Ir a Página Principal</button>
+        </div>
+
+        <div id="testResults"></div>
+
+        <div id="console">🔧 Consola de pruebas - Los resultados aparecerán aquí</div>
+
+        <div class="test-section">
+            <h3>📋 Pruebas a Ejecutar:</h3>
+            <div class="test-result test-running">
+                <strong>1. TensorFlow.js</strong> - Verificar que la biblioteca de IA carga
+            </div>
+            <div class="test-result test-running">
+                <strong>2. Modelo Grande</strong> - Cargar modelo de 43 shards
+            </div>
+            <div class="test-result test-running">
+                <strong>3. Preprocesamiento</strong> - Probar transformación de imágenes
+            </div>
+            <div class="test-result test-running">
+                <strong>4. Predicción</strong> - Probar detección con datos de prueba
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para iniciar pruebas
+        async function iniciarPruebas() {
+            const consoleDiv = document.getElementById('console');
+            const resultsDiv = document.getElementById('testResults');
+            
+            // Limpiar consola anterior
+            consoleDiv.innerHTML = '🔧 Iniciando pruebas...\n\n';
+            
+            // Redirigir console.log a la página
+            const originalLog = console.log;
+            const originalError = console.error;
+            
+            console.log = function(message) {
+                originalLog.apply(console, arguments);
+                consoleDiv.innerHTML += message + '\n';
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            };
+            
+            console.error = function(message) {
+                originalError.apply(console, arguments);
+                consoleDiv.innerHTML += '❌ ' + message + '\n';
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            };
+            
+            try {
+                // Ejecutar pruebas
+                const exito = await ejecutarPruebasCompletas();
+                
+                // Mostrar resultado final
+                if (exito) {
+                    resultsDiv.innerHTML = '<div class="test-result test-pass"><h3>🎉 ¡TODAS LAS PRUEBAS PASARON!</h3><p>El sistema está listo para detectar parásitos</p></div>';
+                } else {
+                    resultsDiv.innerHTML = '<div class="test-result test-fail"><h3>❌ ALGUNAS PRUEBAS FALLARON</h3><p>Revisa la consola para más detalles</p></div>';
+                }
+            } catch (error) {
+                console.error('Error inesperado:', error);
+                resultsDiv.innerHTML = '<div class="test-result test-fail"><h3>❌ ERROR EN LAS PRUEBAS</h3><p>' + error.message + '</p></div>';
+            }
+            
+            // Restaurar console.log original
+            console.log = originalLog;
+            console.error = originalError;
+        }
+
+        // Función para limpiar consola
+        function limpiarConsola() {
+            document.getElementById('console').innerHTML = '🔧 Consola de pruebas - Los resultados aparecerán aquí';
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        // Función para ir a página principal
+        function irAPaginaPrincipal() {
+            window.location.href = 'index.html';
+        }
+
+        // Inicializar cuando la página cargue
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Sistema de pruebas inicializado - Modelo Grande');
+            console.log('💡 Ejecuta iniciarPruebas() para probar el sistema');
+        });
+    </script>
+</body>
+</html>
