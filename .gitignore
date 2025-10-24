@@ -1,0 +1,15 @@
+# Archivos temporales
+*.tmp
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# TensorFlow
+*.h5
+*.pb

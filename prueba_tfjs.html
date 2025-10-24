@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prueba TensorFlow.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+</head>
+<body>
+    <h1>Prueba Simple de TensorFlow.js</h1>
+    <div id="output"></div>
+    
+    <script>
+        // Prueba MUY simple de TensorFlow.js
+        function probarTensorFlow() {
+            const output = document.getElementById('output');
+            
+            if (typeof tf !== 'undefined') {
+                // Crear tensores simples (arrays de números)
+                const tensor1 = tf.tensor([1, 2, 3, 4]);
+                const tensor2 = tf.tensor([1, 1, 1, 1]);
+                const resultado = tensor1.add(tensor2);
+                
+                output.innerHTML = `
+                    <div style="color: green; font-weight: bold;">
+                        ✅ TensorFlow.js FUNCIONA
+                    </div>
+                    <p>Versión: ${tf.version.tfjs}</p>
+                    <p>Prueba matemática: [1,2,3,4] + [1,1,1,1] = [${resultado.dataSync()}]</p>
+                `;
+                
+                // Liberar memoria
+                tensor1.dispose();
+                tensor2.dispose();
+                resultado.dispose();
+            } else {
+                output.innerHTML = '<div style="color: red;">❌ TensorFlow.js NO funciona</div>';
+            }
+        }
+        
+        // Ejecutar cuando la página cargue
+        document.addEventListener('DOMContentLoaded', probarTensorFlow);
+    </script>
+</body>
+</html>

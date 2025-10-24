@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Parásitos - IA</title>
+    
+    <!-- ✅ AGREGAMOS TENSORFLOW.JS - DÍA 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .upload-area {
+            border: 2px dashed #3498db;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 10px;
+            background-color: #ecf0f1;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .success {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Detector de Parásitos con IA</h1>
+        <p>Sube una imagen de un parásito para analizarlo</p>
+        
+        <!-- ✅ AGREGAMOS ESTADO DE TENSORFLOW.JS - DÍA 3 -->
+        <div id="tfjsStatus" class="status">
+            TensorFlow.js: Cargando...
+        </div>
+        
+        <div class="upload-area">
+            <input type="file" id="imageUpload" accept="image/*" disabled>
+            <br><br>
+            <button onclick="analyzeImage()" id="analyzeBtn" disabled>Analizar Imagen</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // ✅ DÍA 3: CÓDIGO PARA TENSORFLOW.JS
+        
+        // Variable global para el modelo (lo cargaremos después)
+        let modeloIA = null;
+        
+        // Función para verificar si TensorFlow.js está listo
+        function verificarTensorFlowJS() {
+            const statusElement = document.getElementById('tfjsStatus');
+            
+            if (typeof tf !== 'undefined') {
+                statusElement.innerHTML = '✅ TensorFlow.js: CARGADO CORRECTAMENTE';
+                statusElement.className = 'status success';
+                
+                // Habilitar el botón y input de archivo
+                document.getElementById('imageUpload').disabled = false;
+                document.getElementById('analyzeBtn').disabled = false;
+                
+                console.log("✅ TensorFlow.js está listo para usar");
+                console.log("Versión de TensorFlow.js:", tf.version.tfjs);
+                
+            } else {
+                statusElement.innerHTML = '❌ TensorFlow.js: ERROR al cargar';
+                statusElement.className = 'status error';
+                console.error("❌ TensorFlow.js no se cargó correctamente");
+            }
+        }
+        
+        // Función para analizar imagen (MEJORADA - DÍA 3)
+        function analyzeImage() {
+            const input = document.getElementById('imageUpload');
+            const resultDiv = document.getElementById('result');
+            
+            if (!input.files[0]) {
+                resultDiv.innerHTML = '<div class="status error">❌ Por favor selecciona una imagen primero</div>';
+                return;
+            }
+            
+            if (typeof tf === 'undefined') {
+                resultDiv.innerHTML = '<div class="status error">❌ TensorFlow.js no está cargado. Recarga la página.</div>';
+                return;
+            }
+            
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                resultDiv.innerHTML = `
+                    <div class="status loading">
+                        🔄 Analizando imagen con TensorFlow.js...
+                    </div>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <img src="${e.target.result}" style="max-width: 300px; border-radius: 10px;">
+                    </div>
+                `;
+                
+                // Simular análisis (en próximos días conectaremos el modelo real)
+                setTimeout(() => {
+                    resultDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Análisis completado con TensorFlow.js
+                        </div>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <img src="${e.target.result}" style="max-width: 300px; border-radius: 10px;">
+                        </div>
+                        <h3>🔧 Función en desarrollo</h3>
+                        <p>TensorFlow.js está funcionando correctamente. En los próximos días conectaremos el modelo de IA real.</p>
+                        <p><strong>TensorFlow.js versión:</strong> ${tf.version.tfjs}</p>
+                    `;
+                }, 2000);
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // ✅ Cuando la página termine de cargar, verificar TensorFlow.js
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🔄 Iniciando verificación de TensorFlow.js...");
+            setTimeout(verificarTensorFlowJS, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba - Carga de Modelo TensorFlow.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .loading { background: #fff3cd; color: #856404; }
+        .success { background: #d1ecf1; color: #0c5460; }
+        .error { background: #f8d7da; color: #721c24; }
+        button {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Prueba de Carga de Modelo TensorFlow.js</h1>
+        <p>Esta página prueba que podemos cargar modelos de IA en el navegador.</p>
+        
+        <div id="status" class="status loading">
+            🔄 Iniciando prueba...
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="cargarModelo()" id="btnCargar">Cargar Modelo de Prueba</button>
+            <button onclick="hacerPrediccion()" id="btnPredecir" disabled>Hacer Predicción de Prueba</button>
+            <button onclick="limpiarResultados()" id="btnLimpiar">Limpiar</button>
+        </div>
+        
+        <div id="resultados"></div>
+    </div>
+
+    <script>
+        let modelo = null;
+        
+        function actualizarEstado(mensaje, tipo) {
+            const status = document.getElementById('status');
+            status.textContent = mensaje;
+            status.className = `status ${tipo}`;
+        }
+        
+        async function cargarModelo() {
+            try {
+                actualizarEstado('🔄 Cargando modelo...', 'loading');
+                document.getElementById('btnCargar').disabled = true;
+                
+                // ✅ INTENTAR CARGAR EL MODELO
+                modelo = await tf.loadLayersModel('modelo/model.json');
+                
+                actualizarEstado('✅ Modelo cargado correctamente!', 'success');
+                document.getElementById('btnPredecir').disabled = false;
+                
+                // Mostrar información del modelo
+                const info = `
+                    <div class="result">
+                        <h3>📊 Información del Modelo:</h3>
+                        <p><strong>Entrada:</strong> ${modelo.inputs[0].shape}</p>
+                        <p><strong>Salida:</strong> ${modelo.outputs[0].shape}</p>
+                        <p><strong>Número de capas:</strong> ${modelo.layers.length}</p>
+                    </div>
+                `;
+                document.getElementById('resultados').innerHTML = info;
+                
+                console.log("✅ Modelo cargado:", modelo);
+                
+            } catch (error) {
+                actualizarEstado('❌ Error cargando modelo: ' + error.message, 'error');
+                document.getElementById('btnCargar').disabled = false;
+                console.error("Error:", error);
+            }
+        }
+        
+        async function hacerPrediccion() {
+            if (!modelo) {
+                alert('Primero carga el modelo');
+                return;
+            }
+            
+            try {
+                actualizarEstado('🔮 Haciendo predicción de prueba...', 'loading');
+                
+                // Crear datos de prueba aleatorios
+                const datosPrueba = tf.randomNormal([1, 10]);  // 1 ejemplo, 10 características
+                
+                // Hacer predicción
+                const prediccion = modelo.predict(datosPrueba);
+                const resultados = await prediccion.data();
+                
+                // Mostrar resultados
+                const resultadoHTML = `
+                    <div class="result">
+                        <h3>🎯 Resultado de Predicción:</h3>
+                        <p><strong>Datos de entrada:</strong> [10 números aleatorios]</p>
+                        <p><strong>Probabilidades:</strong></p>
+                        <ul>
+                            <li>Clase 1: ${(resultados[0] * 100).toFixed(2)}%</li>
+                            <li>Clase 2: ${(resultados[1] * 100).toFixed(2)}%</li>
+                            <li>Clase 3: ${(resultados[2] * 100).toFixed(2)}%</li>
+                        </ul>
+                        <p><strong>Clase predicha:</strong> ${resultados.indexOf(Math.max(...resultados)) + 1}</p>
+                    </div>
+                `;
+                
+                document.getElementById('resultados').innerHTML += resultadoHTML;
+                actualizarEstado('✅ Predicción completada!', 'success');
+                
+                // Liberar memoria
+                datosPrueba.dispose();
+                prediccion.dispose();
+                
+            } catch (error) {
+                actualizarEstado('❌ Error en predicción: ' + error.message, 'error');
+                console.error("Error:", error);
+            }
+        }
+        
+        function limpiarResultados() {
+            document.getElementById('resultados').innerHTML = '';
+            actualizarEstado('✅ Resultados limpiados. Listo para nuevas pruebas.', 'success');
+        }
+        
+        // Verificar TensorFlow.js al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof tf !== 'undefined') {
+                actualizarEstado('✅ TensorFlow.js cargado. Listo para probar modelo.', 'success');
+            } else {
+                actualizarEstado('❌ TensorFlow.js no está cargado', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
