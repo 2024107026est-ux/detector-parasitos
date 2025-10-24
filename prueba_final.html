@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Final - Modelo Corregido</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .console { background: black; color: lime; padding: 15px; height: 400px; overflow-y: auto; font-family: monospace; }
+        button { background: #28a745; color: white; border: none; padding: 15px 25px; margin: 10px; font-size: 16px; cursor: pointer; border-radius: 5px; }
+        .success { color: lime; }
+        .error { color: red; }
+        .info { color: cyan; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; font-weight: bold; }
+        .loading { background: #fff3cd; }
+        .success-status { background: #d4edda; color: #155724; }
+        .error-status { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Prueba Final - Modelo con batch_input_shape</h1>
+    <p>Este modelo usa <strong>exclusivamente batch_input_shape</strong> sin input_shape</p>
+    
+    <div class="status" id="status">Listo para probar...</div>
+    
+    <button onclick="probarModelo()">🔍 Probar Carga del Modelo</button>
+    <button onclick="probarEstructura()">📊 Verificar Estructura</button>
+    <button onclick="probarPrediccion()">🧪 Probar Predicción</button>
+    <button onclick="probarTodo()" style="background: #dc3545;">▶ Probar Todo Automáticamente</button>
+    
+    <h3>Consola de Ejecución:</h3>
+    <div id="console" class="console"></div>
+
+    <script>
+        let modelo = null;
+        const consoleEl = document.getElementById('console');
+        const statusEl = document.getElementById('status');
+
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'lime' : 'cyan';
+            consoleEl.innerHTML += `<div style="color: ${color}; margin: 2px 0;">[${time}] ${msg}</div>`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function actualizarEstado(msg, tipo = 'loading') {
+            statusEl.textContent = msg;
+            statusEl.className = `status ${tipo === 'success' ? 'success-status' : tipo === 'error' ? 'error-status' : 'loading'}`;
+        }
+
+        async function probarModelo() {
+            actualizarEstado('🔄 Cargando modelo...');
+            log('Iniciando carga del modelo con batch_input_shape...', 'info');
+            
+            try {
+                // Limpiar modelo anterior
+                if (modelo) {
+                    modelo.dispose();
+                    modelo = null;
+                }
+                
+                modelo = await tf.loadLayersModel('modelo/model.json');
+                actualizarEstado('✅ ¡MODELO CARGADO EXITOSAMENTE!', 'success');
+                log('🎉 ¡ÉXITO! Modelo cargado sin errores', 'success');
+                return true;
+            } catch (error) {
+                actualizarEstado('❌ Error cargando modelo', 'error');
+                log(`ERROR: ${error.message}`, 'error');
+                log('Detalles completos:', 'error');
+                log(error.toString(), 'error');
+                return false;
+            }
+        }
+
+        async function probarEstructura() {
+            if (!modelo) {
+                log('Primero carga el modelo', 'error');
+                return;
+            }
+            
+            try {
+                actualizarEstado('🔍 Verificando estructura...');
+                log('Verificando estructura del modelo...', 'info');
+                
+                const inputShape = modelo.inputs[0].shape;
+                const outputShape = modelo.outputs[0].shape;
+                
+                log(`✅ Input shape: [${inputShape}]`, 'success');
+                log(`✅ Output shape: [${outputShape}]`, 'success');
+                log(`✅ Número de capas: ${modelo.layers.length}`, 'success');
+                log(`✅ Primera capa: ${modelo.layers[0].__class__.__name__}`, 'success');
+                
+                actualizarEstado('✅ Estructura verificada correctamente', 'success');
+            } catch (error) {
+                actualizarEstado('❌ Error verificando estructura', 'error');
+                log(`ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function probarPrediccion() {
+            if (!modelo) {
+                log('Primero carga el modelo', 'error');
+                return;
+            }
+            
+            try {
+                actualizarEstado('🧪 Realizando predicción...');
+                log('Creando tensor de entrada...', 'info');
+                
+                const input = tf.ones([1, 224, 224, 3]);
+                log(`Tensor creado: shape [${input.shape}]`, 'info');
+                
+                const output = modelo.predict(input);
+                const results = await output.data();
+                
+                log(`✅ Predicción exitosa! Shape: [${output.shape}]`, 'success');
+                log(`Valores: [${Array.from(results).map(v => v.toFixed(4)).join(', ')}]`, 'success');
+                
+                input.dispose();
+                output.dispose();
+                
+                actualizarEstado('🎉 ¡Predicción exitosa!', 'success');
+            } catch (error) {
+                actualizarEstado('❌ Error en predicción', 'error');
+                log(`ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function probarTodo() {
+            log('=== INICIANDO PRUEBA COMPLETA ===', 'info');
+            
+            const cargaOk = await probarModelo();
+            if (!cargaOk) return;
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await probarEstructura();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await probarPrediccion();
+            
+            log('=== PRUEBA COMPLETA FINALIZADA ===', 'info');
+        }
+
+        // Inicialización
+        log('Página de prueba final cargada', 'info');
+        log('TensorFlow.js v' + tf.version.tfjs, 'info');
+        actualizarEstado('✅ Sistema listo - Haz clic en "Probar Todo Automáticamente"', 'success');
+    </script>
+</body>
+</html>
