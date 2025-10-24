@@ -191,7 +191,7 @@
                 <li>Trichiuris trichiura</li>
             </ul>
             <p><strong>🧠 Tecnología:</strong> Transfer Learning + MobileNetV2</p>
-            <p><strong>📅 Entrenado:</strong> 2025-10-24 14:30:37</p>
+            <p><strong>📅 Entrenado:</strong> 2025-10-24 14:43:00</p>
         </div>
     </div>
 
@@ -213,7 +213,7 @@
         function actualizarEstado(mensaje, tipo) {
             const status = document.getElementById('systemStatus');
             status.textContent = mensaje;
-            status.className = `status ${tipo}`;
+            status.className = 'status ' + tipo;
         }
 
         // Función para cargar el modelo de IA REAL
@@ -238,7 +238,7 @@
 
         // Función para preprocesar imagen (igual que durante entrenamiento)
         function preprocesarImagen(imgElement) {
-            return tf.tidy(() => {
+            return tf.tidy(function() {
                 const tensor = tf.browser.fromPixels(imgElement)
                     .resizeNearestNeighbor([224, 224])  // Mismo tamaño que entrenamiento
                     .toFloat()
@@ -270,21 +270,20 @@
             reader.onload = async function(e) {
                 try {
                     // Mostrar imagen y estado de procesamiento
-                    resultDiv.innerHTML = `
-                        <div class="status loading">
-                            🔄 Analizando con IA entrenada (84.62% precisión)...
-                        </div>
-                        <div style="text-align: center;">
-                            <img src="${e.target.result}" class="image-preview" alt="Imagen a analizar">
-                            <p><small>Imagen cargada - Procesando con red neuronal...</small></p>
-                        </div>
-                    `;
+                    resultDiv.innerHTML = 
+                        '<div class="status loading">' +
+                        '🔄 Analizando con IA entrenada (84.62% precisión)...' +
+                        '</div>' +
+                        '<div style="text-align: center;">' +
+                        '<img src="' + e.target.result + '" class="image-preview" alt="Imagen a analizar">' +
+                        '<p><small>Imagen cargada - Procesando con red neuronal...</small></p>' +
+                        '</div>';
 
                     // Crear elemento imagen
                     const img = new Image();
                     img.src = e.target.result;
                     
-                    await new Promise((resolve) => {
+                    await new Promise(function(resolve) {
                         img.onload = resolve;
                     });
 
@@ -303,11 +302,10 @@
                     prediccion.dispose();
                     
                 } catch (error) {
-                    resultDiv.innerHTML = `
-                        <div class="status error">
-                            ❌ Error en el análisis: ${error.message}
-                        </div>
-                    `;
+                    resultDiv.innerHTML = 
+                        '<div class="status error">' +
+                        '❌ Error en el análisis: ' + error.message +
+                        '</div>';
                     console.error('Error en análisis:', error);
                 }
             };
@@ -315,12 +313,12 @@
             reader.readAsDataURL(file);
         }
 
-        // Función para mostrar resultados (MEJORADA)
+        // Función para mostrar resultados (MEJORADA y CORREGIDA)
         function mostrarResultadosReales(resultados, imagenSrc) {
             const resultDiv = document.getElementById('result');
             
             // Encontrar la clase con mayor probabilidad
-            const indiceMax = resultados.indexOf(Math.max(...resultados));
+            const indiceMax = resultados.indexOf(Math.max.apply(null, resultados));
             const parasitoDetectado = clasesParasitos[indiceMax];
             const confianzaMax = resultados[indiceMax] * 100;
             
@@ -329,56 +327,53 @@
             if (confianzaMax > 70) colorClase = 'high-confidence';
             else if (confianzaMax > 40) colorClase = 'medium-confidence';
             
-            // Crear HTML de resultados
-            let resultadosHTML = `
-                <div class="status success">
-                    ✅ Análisis completado - <span class="${colorClase}">${parasitoDetectado}</span> detectado
-                </div>
-                
-                <div style="text-align: center;">
-                    <img src="${imagenSrc}" class="image-preview" alt="Resultado del análisis">
-                </div>
-                
-                <div class="parasite-result">
-                    <h3>🎯 Diagnóstico:</h3>
-                    <p><strong>Parásito detectado:</strong> <span class="${colorClase}">${parasitoDetectado}</span></p>
-                    <p><strong>Confianza:</strong> <span class="${colorClase}">${confianzaMax.toFixed(2)}%</span></p>
-                    
-                    <div class="confidence-bar">
-                        <div class="confidence-fill" style="width: ${confianzaMax}%"></div>
-                    </div>
-                    
-                    <p><small>🦠 Modelo entrenado con 127 imágenes reales</small></p>
-                </div>
-                
-                <div class="result">
-                    <h3>📊 Probabilidades de todos los parásitos:</h3>
-            `;
+            // Crear HTML de resultados (sin template strings problemáticos)
+            let resultadosHTML = 
+                '<div class="status success">' +
+                '✅ Análisis completado - <span class="' + colorClase + '">' + parasitoDetectado + '</span> detectado' +
+                '</div>' +
+                '<div style="text-align: center;">' +
+                '<img src="' + imagenSrc + '" class="image-preview" alt="Resultado del análisis">' +
+                '</div>' +
+                '<div class="parasite-result">' +
+                '<h3>🎯 Diagnóstico:</h3>' +
+                '<p><strong>Parásito detectado:</strong> <span class="' + colorClase + '">' + parasitoDetectado + '</span></p>' +
+                '<p><strong>Confianza:</strong> <span class="' + colorClase + '">' + confianzaMax.toFixed(2) + '%</span></p>' +
+                '<div class="confidence-bar">' +
+                '<div class="confidence-fill" style="width: ' + confianzaMax + '%"></div>' +
+                '</div>' +
+                '<p><small>🦠 Modelo entrenado con 127 imágenes reales</small></p>' +
+                '</div>' +
+                '<div class="result">' +
+                '<h3>📊 Probabilidades de todos los parásitos:</h3>';
             
             // Agregar todas las probabilidades ordenadas
-            const resultadosConIndices = resultados.map((prob, index) => ({
-                parasito: clasesParasitos[index],
-                probabilidad: prob * 100,
-                index: index
+            const resultadosConIndices = resultados.map(function(prob, index) {
+                return {
+                    parasito: clasesParasitos[index],
+                    probabilidad: prob * 100,
+                    index: index
+                };
             });
             
             // Ordenar de mayor a menor probabilidad
-            resultadosConIndices.sort((a, b) => b.probabilidad - a.probabilidad);
+            resultadosConIndices.sort(function(a, b) {
+                return b.probabilidad - a.probabilidad;
+            });
             
-            resultadosConIndices.forEach((item, posicion) => {
+            resultadosConIndices.forEach(function(item, posicion) {
                 let claseColor = 'low-confidence';
                 if (item.probabilidad > 70) claseColor = 'high-confidence';
                 else if (item.probabilidad > 40) claseColor = 'medium-confidence';
                 
-                resultadosHTML += `
-                    <div class="class-result">
-                        <span class="class-name">${posicion + 1}. ${item.parasito}</span>
-                        <span class="${claseColor}">${item.probabilidad.toFixed(2)}%</span>
-                    </div>
-                `;
+                resultadosHTML += 
+                    '<div class="class-result">' +
+                    '<span class="class-name">' + (posicion + 1) + '. ' + item.parasito + '</span>' +
+                    '<span class="' + claseColor + '">' + item.probabilidad.toFixed(2) + '%</span>' +
+                    '</div>';
             });
             
-            resultadosHTML += `</div>`;
+            resultadosHTML += '</div>';
             
             resultDiv.innerHTML = resultadosHTML;
         }
@@ -395,16 +390,16 @@
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('imageUpload');
             
-            uploadArea.addEventListener('dragover', (e) => {
+            uploadArea.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 uploadArea.classList.add('dragover');
             });
             
-            uploadArea.addEventListener('dragleave', () => {
+            uploadArea.addEventListener('dragleave', function() {
                 uploadArea.classList.remove('dragover');
             });
             
-            uploadArea.addEventListener('drop', (e) => {
+            uploadArea.addEventListener('drop', function(e) {
                 e.preventDefault();
                 uploadArea.classList.remove('dragover');
                 
