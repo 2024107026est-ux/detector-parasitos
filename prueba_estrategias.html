@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba con Múltiples Estrategias</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <style>
+        body { font-family: Arial; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .strategy { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #007cba; }
+        .console { background: black; color: lime; padding: 15px; height: 400px; overflow-y: auto; font-family: monospace; }
+        button { background: #28a745; color: white; border: none; padding: 12px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        .success { color: lime; }
+        .error { color: red; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>🛠️ Prueba con Múltiples Estrategias</h1>
+    
+    <div class="strategy">
+        <h3>🎯 Estrategia 1: Carga Directa</h3>
+        <button onclick="estrategia1()">Probar Carga Normal</button>
+    </div>
+    
+    <div class="strategy">
+        <h3>🔧 Estrategia 2: Carga con Configuración</h3>
+        <button onclick="estrategia2()">Probar con fetch+JSON</button>
+    </div>
+    
+    <div class="strategy">
+        <h3>⚡ Estrategia 3: Modelo en Memoria</h3>
+        <button onclick="estrategia3()">Crear Modelo en Memoria</button>
+    </div>
+    
+    <div class="strategy">
+        <h3>🔄 Estrategia 4: Todos los Métodos</h3>
+        <button onclick="probarTodos()">Probar Todas las Estrategias</button>
+    </div>
+    
+    <h3>Consola:</h3>
+    <div id="console" class="console"></div>
+
+    <script>
+        const consoleEl = document.getElementById('console');
+        
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'lime' : type === 'warning' ? 'orange' : 'cyan';
+            consoleEl.innerHTML += `<div style="color: ${color}; margin: 2px 0;">[${time}] ${msg}</div>`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        async function estrategia1() {
+            log('🎯 ESTRATEGIA 1: Carga directa del modelo', 'info');
+            try {
+                const modelo = await tf.loadLayersModel('modelo/model.json');
+                log('✅ ESTRATEGIA 1 EXITOSA - Modelo cargado', 'success');
+                log(`Input shape: [${modelo.inputs[0].shape}]`, 'success');
+                modelo.dispose();
+            } catch (error) {
+                log(`❌ ESTRATEGIA 1 FALLIDA: ${error.message}`, 'error');
+            }
+        }
+
+        async function estrategia2() {
+            log('🔧 ESTRATEGIA 2: Carga con fetch manual', 'info');
+            try {
+                // Cargar manualmente el JSON
+                const response = await fetch('modelo/model.json');
+                const modelJson = await response.json();
+                log('✅ JSON cargado manualmente', 'success');
+                
+                // Verificar estructura
+                if (modelJson.modelTopology) {
+                    const topology = modelJson.modelTopology;
+                    log('✅ modelTopology encontrado', 'success');
+                    
+                    // Buscar InputLayer
+                    if (topology.model_config?.config?.layers) {
+                        const layers = topology.model_config.config.layers;
+                        const inputLayer = layers.find(l => l.class_name === 'InputLayer');
+                        if (inputLayer) {
+                            log('✅ InputLayer encontrado', 'success');
+                            log(`Config: ${JSON.stringify(inputLayer.config)}`, 'info');
+                        }
+                    }
+                }
+                
+                // Intentar cargar el modelo
+                const modelo = await tf.loadLayersModel('modelo/model.json');
+                log('✅ ESTRATEGIA 2 EXITOSA', 'success');
+                modelo.dispose();
+            } catch (error) {
+                log(`❌ ESTRATEGIA 2 FALLIDA: ${error.message}`, 'error');
+            }
+        }
+
+        async function estrategia3() {
+            log('⚡ ESTRATEGIA 3: Modelo en memoria', 'info');
+            try {
+                // Crear modelo directamente en TensorFlow.js
+                const modelo = tf.sequential({
+                    layers: [
+                        tf.layers.inputLayer({
+                            inputShape: [224, 224, 3],
+                            batchSize: 1,
+                            name: 'input_memoria'
+                        }),
+                        tf.layers.conv2d({
+                            filters: 8,
+                            kernelSize: 3,
+                            activation: 'relu',
+                            name: 'conv_memoria'
+                        }),
+                        tf.layers.flatten(),
+                        tf.layers.dense({
+                            units: 5,
+                            activation: 'softmax',
+                            name: 'output_memoria'
+                        })
+                    ]
+                });
+                
+                modelo.compile({
+                    optimizer: 'adam',
+                    loss: 'categoricalCrossentropy',
+                    metrics: ['accuracy']
+                });
+                
+                log('✅ ESTRATEGIA 3 EXITOSA - Modelo en memoria creado', 'success');
+                log(`Input shape: [${modelo.inputs[0].shape}]`, 'success');
+                
+                // Probar predicción
+                const input = tf.ones([1, 224, 224, 3]);
+                const output = modelo.predict(input);
+                log(`✅ Predicción exitosa: shape [${output.shape}]`, 'success');
+                
+                input.dispose();
+                output.dispose();
+                modelo.dispose();
+            } catch (error) {
+                log(`❌ ESTRATEGIA 3 FALLIDA: ${error.message}`, 'error');
+            }
+        }
+
+        async function probarTodos() {
+            log('🔄 PROBANDO TODAS LAS ESTRATEGIAS...', 'info');
+            await estrategia1();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await estrategia2();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await estrategia3();
+            log('✅ TODAS LAS ESTRATEGIAS COMPLETADAS', 'info');
+        }
+
+        log('Página de estrategias múltiples cargada', 'info');
+        log('TensorFlow.js v' + tf.version.tfjs, 'info');
+    </script>
+</body>
+</html>
