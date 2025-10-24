@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Parásitos - IA</title>
+    <title>Detector de Parásitos - IA Real</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
     <style>
         body {
@@ -42,10 +42,6 @@
         .upload-area:hover {
             border-color: #2980b9;
             background-color: #d6eaf8;
-        }
-        .upload-area.dragover {
-            border-color: #27ae60;
-            background-color: #d5f4e6;
         }
         button {
             background: linear-gradient(45deg, #3498db, #2980b9);
@@ -139,12 +135,24 @@
             color: #3498db;
             font-weight: bold;
         }
+        .high-confidence {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .medium-confidence {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        .low-confidence {
+            color: #e74c3c;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔬 Detector de Parásitos con IA</h1>
-        <p class="subtitle">Sube una imagen de un parásito para analizarlo con inteligencia artificial</p>
+        <h1>🔬 Detector de Parásitos - IA Real</h1>
+        <p class="subtitle">Sistema entrenado con 127 imágenes reales - Precisión: 84.62%</p>
         
         <!-- Estado del sistema -->
         <div id="systemStatus" class="status loading">
@@ -153,29 +161,37 @@
 
         <!-- Área de subida de imágenes -->
         <div class="upload-area" id="uploadArea">
-            <h3>📤 Sube tu imagen aquí</h3>
+            <h3>📤 Sube imagen de parásito microscópico</h3>
             <p>Arrastra una imagen o haz clic para seleccionar</p>
             <input type="file" id="imageUpload" accept="image/*" style="display: none;">
             <button onclick="document.getElementById('imageUpload').click()">Seleccionar Imagen</button>
-            <p><small>Formatos soportados: JPG, PNG, GIF</small></p>
+            <p><small>Formatos: JPG, PNG | Tamaño recomendado: 224x224 px</small></p>
         </div>
 
         <!-- Botón de análisis -->
         <div style="text-align: center;">
-            <button onclick="analyzeImage()" id="analyzeBtn" disabled>🔍 Analizar Imagen con IA</button>
+            <button onclick="analyzeImage()" id="analyzeBtn" disabled>🔍 Analizar con IA Real</button>
             <button onclick="clearResults()" id="clearBtn">🗑️ Limpiar</button>
         </div>
 
         <!-- Resultados -->
         <div id="result"></div>
 
-        <!-- Información del modelo -->
+        <!-- Información del sistema REAL -->
         <div class="result" style="margin-top: 30px;">
-            <h3>ℹ️ Información del Sistema</h3>
-            <p><strong>Modelo:</strong> Red Neuronal Convolucional (CNN)</p>
-            <p><strong>Precisión:</strong> 19%</p>
-            <p><strong>Clases detectadas:</strong> 5 tipos de parásitos</p>
-            <p><strong>Tecnología:</strong> TensorFlow.js en navegador</p>
+            <h3>ℹ️ Sistema de Detección Real</h3>
+            <p><strong>🎯 Precisión:</strong> 84.62% (modelo mejorado)</p>
+            <p><strong>📊 Entrenado con:</strong> 127 imágenes reales</p>
+            <p><strong>🦠 Parásitos detectados:</strong></p>
+            <ul>
+                <li>Ascaris lumbricoides</li>
+                <li>Entamoeba histolytica</li>
+                <li>Giardia lamblia</li>
+                <li>Hymenolepis nana</li>
+                <li>Trichiuris trichiura</li>
+            </ul>
+            <p><strong>🧠 Tecnología:</strong> Transfer Learning + MobileNetV2</p>
+            <p><strong>📅 Entrenado:</strong> 2025-10-24 14:30:37</p>
         </div>
     </div>
 
@@ -184,13 +200,13 @@
         let modelo = null;
         let imagenActual = null;
 
-        // Nombres de las clases (parásitos)
+        // TUS PARÁSITOS REALES - ORDEN CORRECTO
         const clasesParasitos = {
             '0': 'Ascaris lumbricoides',
-            '1': 'Trichuris trichiura',
-            '2': 'Ancylostoma duodenale',
-            '3': 'Giardia lamblia', 
-            '4': 'Entamoeba histolytica'
+            '1': 'Entamoeba histolytica', 
+            '2': 'Giardia lamblia',
+            '3': 'Hymenolepis nana',
+            '4': 'Trichiuris trichiura'
         };
 
         // Función para actualizar estado del sistema
@@ -200,18 +216,19 @@
             status.className = `status ${tipo}`;
         }
 
-        // Función para cargar el modelo de IA
+        // Función para cargar el modelo de IA REAL
         async function cargarModelo() {
             try {
-                actualizarEstado('🔄 Cargando modelo de IA...', 'loading');
+                actualizarEstado('🔄 Cargando modelo de IA REAL...', 'loading');
                 
-                // Cargar el modelo entrenado
+                // Cargar el modelo entrenado con tus imágenes
                 modelo = await tf.loadLayersModel('modelo/model.json');
                 
-                actualizarEstado('✅ Sistema de IA listo - Modelo cargado correctamente', 'success');
+                actualizarEstado('✅ IA REAL cargada - Modelo entrenado con 127 imágenes', 'success');
                 document.getElementById('analyzeBtn').disabled = false;
                 
-                console.log('✅ Modelo cargado:', modelo);
+                console.log('✅ Modelo REAL cargado:', modelo);
+                console.log('🎯 Precisión entrenamiento: 84.62%');
                 
             } catch (error) {
                 actualizarEstado('❌ Error cargando el modelo: ' + error.message, 'error');
@@ -219,12 +236,11 @@
             }
         }
 
-        // Función para preprocesar imagen
+        // Función para preprocesar imagen (igual que durante entrenamiento)
         function preprocesarImagen(imgElement) {
-            // Convertir imagen a tensor
             return tf.tidy(() => {
                 const tensor = tf.browser.fromPixels(imgElement)
-                    .resizeNearestNeighbor([224, 224])  // Tamaño que espera el modelo
+                    .resizeNearestNeighbor([224, 224])  // Mismo tamaño que entrenamiento
                     .toFloat()
                     .div(255.0)  // Normalizar a [0,1]
                     .expandDims(0);  // Agregar dimensión batch
@@ -256,11 +272,11 @@
                     // Mostrar imagen y estado de procesamiento
                     resultDiv.innerHTML = `
                         <div class="status loading">
-                            🔄 Procesando imagen con IA...
+                            🔄 Analizando con IA entrenada (84.62% precisión)...
                         </div>
                         <div style="text-align: center;">
                             <img src="${e.target.result}" class="image-preview" alt="Imagen a analizar">
-                            <p><small>Imagen cargada - Analizando con red neuronal...</small></p>
+                            <p><small>Imagen cargada - Procesando con red neuronal...</small></p>
                         </div>
                     `;
 
@@ -272,15 +288,15 @@
                         img.onload = resolve;
                     });
 
-                    // Preprocesar imagen
+                    // Preprocesar imagen (EXACTAMENTE igual que en entrenamiento)
                     const tensorImagen = preprocesarImagen(img);
                     
-                    // Hacer predicción
+                    // Hacer predicción con el modelo REAL
                     const prediccion = modelo.predict(tensorImagen);
                     const resultados = await prediccion.data();
                     
                     // Mostrar resultados
-                    mostrarResultados(resultados, e.target.result);
+                    mostrarResultadosReales(resultados, e.target.result);
                     
                     // Liberar memoria
                     tensorImagen.dispose();
@@ -299,8 +315,8 @@
             reader.readAsDataURL(file);
         }
 
-        // Función para mostrar resultados
-        function mostrarResultados(resultados, imagenSrc) {
+        // Función para mostrar resultados (MEJORADA)
+        function mostrarResultadosReales(resultados, imagenSrc) {
             const resultDiv = document.getElementById('result');
             
             // Encontrar la clase con mayor probabilidad
@@ -308,10 +324,15 @@
             const parasitoDetectado = clasesParasitos[indiceMax];
             const confianzaMax = resultados[indiceMax] * 100;
             
+            // Determinar color según confianza
+            let colorClase = 'low-confidence';
+            if (confianzaMax > 70) colorClase = 'high-confidence';
+            else if (confianzaMax > 40) colorClase = 'medium-confidence';
+            
             // Crear HTML de resultados
             let resultadosHTML = `
                 <div class="status success">
-                    ✅ Análisis completado - ${parasitoDetectado} detectado
+                    ✅ Análisis completado - <span class="${colorClase}">${parasitoDetectado}</span> detectado
                 </div>
                 
                 <div style="text-align: center;">
@@ -320,25 +341,39 @@
                 
                 <div class="parasite-result">
                     <h3>🎯 Diagnóstico:</h3>
-                    <p><strong>Parásito detectado:</strong> ${parasitoDetectado}</p>
-                    <p><strong>Confianza:</strong> ${confianzaMax.toFixed(2)}%</p>
+                    <p><strong>Parásito detectado:</strong> <span class="${colorClase}">${parasitoDetectado}</span></p>
+                    <p><strong>Confianza:</strong> <span class="${colorClase}">${confianzaMax.toFixed(2)}%</span></p>
                     
                     <div class="confidence-bar">
                         <div class="confidence-fill" style="width: ${confianzaMax}%"></div>
                     </div>
+                    
+                    <p><small>🦠 Modelo entrenado con 127 imágenes reales</small></p>
                 </div>
                 
                 <div class="result">
-                    <h3>📊 Probabilidades de todas las clases:</h3>
+                    <h3>📊 Probabilidades de todos los parásitos:</h3>
             `;
             
-            // Agregar todas las probabilidades
-            resultados.forEach((prob, index) => {
-                const porcentaje = (prob * 100).toFixed(2);
+            // Agregar todas las probabilidades ordenadas
+            const resultadosConIndices = resultados.map((prob, index) => ({
+                parasito: clasesParasitos[index],
+                probabilidad: prob * 100,
+                index: index
+            });
+            
+            // Ordenar de mayor a menor probabilidad
+            resultadosConIndices.sort((a, b) => b.probabilidad - a.probabilidad);
+            
+            resultadosConIndices.forEach((item, posicion) => {
+                let claseColor = 'low-confidence';
+                if (item.probabilidad > 70) claseColor = 'high-confidence';
+                else if (item.probabilidad > 40) claseColor = 'medium-confidence';
+                
                 resultadosHTML += `
                     <div class="class-result">
-                        <span class="class-name">${clasesParasitos[index]}</span>
-                        <span class="class-prob">${porcentaje}%</span>
+                        <span class="class-name">${posicion + 1}. ${item.parasito}</span>
+                        <span class="${claseColor}">${item.probabilidad.toFixed(2)}%</span>
                     </div>
                 `;
             });
