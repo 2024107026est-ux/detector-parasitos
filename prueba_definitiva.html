@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Definitiva - Modelo Corregido</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .loading { background-color: #fff3cd; color: #856404; }
+        .success { background-color: #d1edff; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            background-color: #f8f9fa;
+        }
+        .details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover { background-color: #2980b9; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+        .log-entry { margin: 5px 0; }
+        .success-log { color: #4CAF50; }
+        .error-log { color: #f44336; }
+        .info-log { color: #2196F3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 PRUEBA DEFINITIVA - MODELO CORREGIDO</h1>
+        
+        <div class="section">
+            <h2>✅ Características del Modelo Corregido</h2>
+            <p><strong>Primera Capa:</strong> InputLayer (¡CORRECTO!)</p>
+            <p><strong>Input Shape:</strong> (1, 224, 224, 3)</p>
+            <p><strong>Output Shape:</strong> (1, 5) - 5 parásitos</p>
+            <p><strong>Total Capas:</strong> 12</p>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Pruebas</h2>
+            <button onclick="probarCargaModelo()">1. Probar Carga del Modelo</button>
+            <button onclick="probarEstructura()">2. Verificar Estructura</button>
+            <button onclick="probarPrediccion()">3. Probar Predicción</button>
+            <button onclick="probarTodo()" style="background-color: #e74c3c;">▶ Probar Todo Automáticamente</button>
+            
+            <div id="status" class="status">Esperando inicio de pruebas...</div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Resultados Detallados</h2>
+            <div id="details" class="details">
+                Los resultados se mostrarán aquí...
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Consola de Ejecución</h2>
+            <div id="console" class="console"></div>
+        </div>
+    </div>
+
+    <script>
+        let modelo = null;
+        const consoleElement = document.getElementById('console');
+        const statusElement = document.getElementById('status');
+        const detailsElement = document.getElementById('details');
+
+        function log(mensaje, tipo = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const clase = tipo + '-log';
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${clase}`;
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${mensaje}`;
+            consoleElement.appendChild(entry);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+            
+            // También log a consola del navegador
+            if (tipo === 'error') {
+                console.error(mensaje);
+            } else {
+                console.log(mensaje);
+            }
+        }
+
+        function actualizarEstado(mensaje, tipo = 'loading') {
+            statusElement.textContent = mensaje;
+            statusElement.className = `status ${tipo}`;
+        }
+
+        function mostrarDetalles(html) {
+            detailsElement.innerHTML = html;
+        }
+
+        async function probarCargaModelo() {
+            actualizarEstado('🔄 Cargando modelo...', 'loading');
+            log('Iniciando carga del modelo desde: modelo/model.json', 'info');
+            
+            try {
+                // LIMPIAR MODELO PREVIO
+                if (modelo) {
+                    modelo.dispose();
+                    modelo = null;
+                }
+                
+                // CARGAR MODELO
+                log('Solicitando carga del modelo...', 'info');
+                modelo = await tf.loadLayersModel('modelo/model.json');
+                
+                actualizarEstado('✅ ¡MODELO CARGADO EXITOSAMENTE!', 'success');
+                log('🎉 ¡MODELO CARGADO CORRECTAMENTE! Error InputLayer SOLUCIONADO', 'success');
+                log('El modelo está listo para usar', 'success');
+                
+                return true;
+                
+            } catch (error) {
+                actualizarEstado('❌ Error cargando modelo', 'error');
+                log(`ERROR: ${error.message}`, 'error');
+                log('Detalles completos del error:', 'error');
+                log(error.toString(), 'error');
+                return false;
+            }
+        }
+
+        async function probarEstructura() {
+            if (!modelo) {
+                log('⚠️ Primero carga el modelo (Paso 1)', 'error');
+                return;
+            }
+            
+            try {
+                actualizarEstado('🔍 Analizando estructura del modelo...', 'loading');
+                log('Verificando estructura del modelo...', 'info');
+                
+                const inputShape = modelo.inputs[0].shape;
+                const outputShape = modelo.outputs[0].shape;
+                const numCapas = modelo.layers.length;
+                
+                // Información detallada de las primeras capas
+                let infoCapas = '<h3>Primeras 3 capas:</h3>';
+                for (let i = 0; i < Math.min(3, modelo.layers.length); i++) {
+                    const capa = modelo.layers[i];
+                    infoCapas += `<p><strong>${i}:</strong> ${capa.__class__.__name__} - ${capa.name}</p>`;
+                }
+                
+                const detallesHTML = `
+                    <h3>📋 Estructura del Modelo:</h3>
+                    <p><strong>✅ Input Shape:</strong> [${inputShape}]</p>
+                    <p><strong>✅ Output Shape:</strong> [${outputShape}]</p>
+                    <p><strong>✅ Número de Capas:</strong> ${numCapas}</p>
+                    <p><strong>✅ Primera Capa:</strong> ${modelo.layers[0].__class__.__name__}</p>
+                    <p><strong>✅ ¿InputLayer Explícito?</strong> ${modelo.layers[0].__class__.__name__ === 'InputLayer' ? '✅ SÍ' : '❌ NO'}</p>
+                    ${infoCapas}
+                `;
+                
+                mostrarDetalles(detallesHTML);
+                actualizarEstado('✅ Estructura verificada correctamente', 'success');
+                log(`✅ Input Shape: [${inputShape}]`, 'success');
+                log(`✅ Output Shape: [${outputShape}]`, 'success');
+                log(`✅ Número de capas: ${numCapas}`, 'success');
+                log(`✅ Primera capa: ${modelo.layers[0].__class__.__name__}`, 'success');
+                
+            } catch (error) {
+                actualizarEstado('❌ Error verificando estructura', 'error');
+                log(`ERROR en estructura: ${error.message}`, 'error');
+            }
+        }
+
+        async function probarPrediccion() {
+            if (!modelo) {
+                log('⚠️ Primero carga el modelo (Paso 1)', 'error');
+                return;
+            }
+            
+            try {
+                actualizarEstado('🧪 Realizando predicción de prueba...', 'loading');
+                log('Creando datos de prueba...', 'info');
+                
+                // Crear tensor de entrada con forma CORRECTA
+                const entradaPrueba = tf.randomNormal([1, 224, 224, 3]);
+                log(`Tensor de entrada creado: shape [${entradaPrueba.shape}]`, 'info');
+                
+                // Realizar predicción
+                log('Ejecutando predicción...', 'info');
+                const inicio = performance.now();
+                const prediccion = modelo.predict(entradaPrueba);
+                const fin = performance.now();
+                
+                const resultados = await prediccion.data();
+                const tiempo = (fin - inicio).toFixed(2);
+                
+                // Calcular suma de probabilidades
+                const sumaProbabilidades = Array.from(resultados).reduce((a, b) => a + b, 0);
+                const valoresFormateados = Array.from(resultados).map(v => v.toFixed(6));
+                
+                const detallesHTML = `
+                    <h3>🎯 Resultado de Predicción:</h3>
+                    <p><strong>✅ Estado:</strong> PREDICCIÓN EXITOSA</p>
+                    <p><strong>⏱️ Tiempo:</strong> ${tiempo} ms</p>
+                    <p><strong>📐 Shape de salida:</strong> [${prediccion.shape}]</p>
+                    <p><strong>🧮 Suma de probabilidades:</strong> ${sumaProbabilidades.toFixed(6)}</p>
+                    <p><strong>📊 Valores:</strong> [${valoresFormateados.join(', ')}]</p>
+                    <p><strong>💡 Nota:</strong> Los valores son aleatorios porque el modelo no está entrenado con pesos reales</p>
+                `;
+                
+                mostrarDetalles(detallesHTML);
+                actualizarEstado('🎉 ¡PREDICCIÓN EXITOSA! Modelo funcionando', 'success');
+                log(`✅ Predicción exitosa en ${tiempo}ms`, 'success');
+                log(`✅ Shape salida: [${prediccion.shape}], Suma: ${sumaProbabilidades.toFixed(6)}`, 'success');
+                
+                // Limpiar memoria
+                entradaPrueba.dispose();
+                prediccion.dispose();
+                log('Memoria liberada', 'info');
+                
+            } catch (error) {
+                actualizarEstado('❌ Error en predicción', 'error');
+                log(`ERROR en predicción: ${error.message}`, 'error');
+                log('Stack trace completo:', 'error');
+                log(error.stack, 'error');
+            }
+        }
+
+        async function probarTodo() {
+            log('=== INICIANDO PRUEBA COMPLETA AUTOMÁTICA ===', 'info');
+            
+            // Paso 1: Cargar modelo
+            const cargaExitosa = await probarCargaModelo();
+            if (!cargaExitosa) {
+                log('❌ PRUEBA FALLIDA - No se pudo cargar el modelo', 'error');
+                return;
+            }
+            
+            // Pequeña pausa
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Paso 2: Verificar estructura
+            await probarEstructura();
+            
+            // Pequeña pausa
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Paso 3: Probar predicción
+            await probarPrediccion();
+            
+            log('=== PRUEBA COMPLETA FINALIZADA ===', 'info');
+        }
+
+        // Inicialización
+        log('Página de prueba definitiva cargada', 'info');
+        log('TensorFlow.js version: ' + tf.version.tfjs, 'info');
+        log('Listo para probar el modelo corregido', 'success');
+        actualizarEstado('✅ Sistema listo - Haz clic en "Probar Todo Automáticamente"', 'success');
+    </script>
+</body>
+</html>

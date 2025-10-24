@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prueba Detallada - Modelo Corregido</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { background: #f0f8ff; padding: 10px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Prueba Detallada - Modelo Corregido</h1>
+    <div id="log"></div>
+    <div id="result"></div>
+
+    <script>
+        const log = document.getElementById('log');
+        const result = document.getElementById('result');
+        
+        function agregarLog(mensaje, tipo = 'info') {
+            log.innerHTML += '<div class="' + tipo + '">' + mensaje + '</div>';
+        }
+        
+        async function pruebaCompleta() {
+            try {
+                agregarLog('1. 🔄 Verificando TensorFlow.js...');
+                if (typeof tf === 'undefined') {
+                    throw new Error('TensorFlow.js no está cargado');
+                }
+                agregarLog('   ✅ TensorFlow.js versión: ' + tf.version.tfjs, 'success');
+                
+                agregarLog('2. 🔄 Cargando modelo...');
+                const modelo = await tf.loadLayersModel('modelo/model.json');
+                agregarLog('   ✅ Modelo cargado correctamente', 'success');
+                
+                agregarLog('3. 🔄 Verificando estructura del modelo...');
+                agregarLog('   📐 Input shape: ' + modelo.inputs[0].shape, 'info');
+                agregarLog('   📐 Output shape: ' + modelo.outputs[0].shape, 'info');
+                agregarLog('   🔧 Número de capas: ' + modelo.layers.length, 'info');
+                
+                agregarLog('4. 🔄 Probando predicción...');
+                const testInput = tf.randomNormal([1, 224, 224, 3]);
+                const prediccion = modelo.predict(testInput);
+                const resultados = await prediccion.data();
+                
+                agregarLog('   ✅ Predicción exitosa', 'success');
+                agregarLog('   📊 Resultados: ' + Array.from(resultados).map(r => r.toFixed(4)).join(', '), 'info');
+                
+                // Limpiar
+                testInput.dispose();
+                prediccion.dispose();
+                
+                result.innerHTML = 
+                    '<div class="success">🎉 ¡PRUEBA EXITOSA! El modelo funciona correctamente.</div>' +
+                    '<div class="info">' +
+                    '<h3>📋 Información del Modelo:</h3>' +
+                    '<p><strong>Input:</strong> ' + modelo.inputs[0].shape + '</p>' +
+                    '<p><strong>Output:</strong> ' + modelo.outputs[0].shape + '</p>' +
+                    '<p><strong>Capas:</strong> ' + modelo.layers.length + '</p>' +
+                    '</div>';
+                    
+            } catch (error) {
+                agregarLog('❌ ERROR: ' + error.message, 'error');
+                result.innerHTML = 
+                    '<div class="error">💥 Error en la prueba: ' + error.message + '</div>' +
+                    '<p>Consulta la consola del navegador para más detalles.</p>';
+                console.error('Error detallado:', error);
+            }
+        }
+        
+        // Ejecutar prueba
+        pruebaCompleta();
+    </script>
+</body>
+</html>
