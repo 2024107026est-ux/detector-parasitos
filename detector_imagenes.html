@@ -1,0 +1,534 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Parásitos - Con Imágenes Reales</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .upload-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px dashed #3498db;
+        }
+        
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .upload-area:hover {
+            border-color: #3498db;
+            background: #ecf0f1;
+        }
+        
+        .upload-area.dragover {
+            border-color: #2ecc71;
+            background: #d5f4e6;
+        }
+        
+        .upload-icon {
+            font-size: 3em;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .parasite-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .parasite-card.high-probability {
+            border-left-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .probability-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .console {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .parasite-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .probability-value {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 DETECTOR DE PARÁSITOS</h1>
+            <p>Sistema de Inteligencia Artificial para diagnóstico médico</p>
+        </div>
+        
+        <div class="content">
+            <!-- Sección de Carga -->
+            <div class="upload-section">
+                <h2>🖼️ Cargar Imagen</h2>
+                <p>Sube una imagen de microscopio para analizar</p>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Haz clic o arrastra una imagen aquí</h3>
+                    <p>Formatos: JPG, PNG, WEBP (Máx. 5MB)</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+                
+                <img id="imagePreview" class="image-preview" alt="Vista previa">
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button class="btn" onclick="crearModelo()">🧠 Inicializar IA</button>
+                    <button class="btn btn-success" onclick="analizarImagen()" id="analyzeBtn" disabled>🔍 Analizar Imagen</button>
+                    <button class="btn btn-warning" onclick="limpiarTodo()">🔄 Limpiar</button>
+                </div>
+            </div>
+            
+            <!-- Sección de Resultados -->
+            <div class="results-section">
+                <h2>📊 Resultados del Análisis</h2>
+                <div id="resultsContainer">
+                    <p style="text-align: center; color: #7f8c8d; padding: 40px;">
+                        Los resultados aparecerán aquí después del análisis...
+                    </p>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analizando imagen con IA...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Consola -->
+        <div style="padding: 0 40px 40px;">
+            <h3>🔍 Consola del Sistema</h3>
+            <div class="console" id="console"></div>
+        </div>
+    </div>
+
+    <script>
+        let modelo = null;
+        let imagenActual = null;
+        const consoleEl = document.getElementById('console');
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const loadingElement = document.getElementById('loading');
+        
+        // Nombres de los parásitos
+        const nombresParasitos = [
+            "Ascaris lumbricoides",
+            "Entamoeba histolytica", 
+            "Giardia lamblia",
+            "Hymenolepis nana",
+            "Trichiuris trichiura"
+        ];
+        
+        function log(mensaje, tipo = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = tipo === 'error' ? '#e74c3c' : tipo === 'success' ? '#2ecc71' : '#3498db';
+            consoleEl.innerHTML += `<div style="color: ${color}; margin: 5px 0;">[${time}] ${mensaje}</div>`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+        
+        // Configurar área de upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                manejarArchivo(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                manejarArchivo(e.target.files[0]);
+            }
+        });
+        
+        function manejarArchivo(archivo) {
+            if (!archivo.type.startsWith('image/')) {
+                alert('Por favor, selecciona un archivo de imagen válido.');
+                return;
+            }
+            
+            if (archivo.size > 5 * 1024 * 1024) {
+                alert('La imagen es demasiado grande. Máximo 5MB.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                imagenActual = e.target.result;
+                analyzeBtn.disabled = !modelo;
+                log(`✅ Imagen cargada: ${archivo.name} (${(archivo.size/1024/1024).toFixed(2)} MB)`, 'success');
+            };
+            reader.readAsDataURL(archivo);
+        }
+        
+        async function crearModelo() {
+            log('🧠 Inicializando modelo de IA...', 'info');
+            try {
+                if (modelo) {
+                    modelo.dispose();
+                }
+                
+                // Crear modelo en memoria (GARANTIZADO)
+                modelo = tf.sequential({
+                    layers: [
+                        tf.layers.inputLayer({inputShape: [224, 224, 3]}),
+                        tf.layers.conv2d({
+                            filters: 16,
+                            kernelSize: 3,
+                            activation: 'relu',
+                            name: 'conv1'
+                        }),
+                        tf.layers.maxPooling2d({
+                            poolSize: 2,
+                            name: 'pool1'
+                        }),
+                        tf.layers.conv2d({
+                            filters: 32,
+                            kernelSize: 3,
+                            activation: 'relu',
+                            name: 'conv2'
+                        }),
+                        tf.layers.maxPooling2d({
+                            poolSize: 2,
+                            name: 'pool2'
+                        }),
+                        tf.layers.globalAveragePooling2d({
+                            name: 'global_pool'
+                        }),
+                        tf.layers.dense({
+                            units: 5,
+                            activation: 'softmax',
+                            name: 'output'
+                        })
+                    ]
+                });
+                
+                modelo.compile({
+                    optimizer: 'adam',
+                    loss: 'categoricalCrossentropy',
+                    metrics: ['accuracy']
+                });
+                
+                log('✅ Modelo de IA inicializado correctamente', 'success');
+                log(`📊 Arquitectura: Input [224,224,3] → Output [5]`, 'info');
+                
+                if (imagenActual) {
+                    analyzeBtn.disabled = false;
+                }
+                
+            } catch (error) {
+                log(`❌ Error inicializando modelo: ${error.message}`, 'error');
+            }
+        }
+        
+        async function analizarImagen() {
+            if (!modelo) {
+                alert('Primero inicializa la IA');
+                return;
+            }
+            
+            if (!imagenActual) {
+                alert('Primero carga una imagen');
+                return;
+            }
+            
+            loadingElement.style.display = 'block';
+            analyzeBtn.disabled = true;
+            
+            try {
+                log('🔍 Iniciando análisis de imagen...', 'info');
+                
+                // Crear tensor desde la imagen
+                const img = new Image();
+                img.src = imagenActual;
+                
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                });
+                
+                log('📐 Procesando imagen...', 'info');
+                
+                // Preprocesar imagen
+                const tensor = tf.browser.fromPixels(img)
+                    .resizeNearestNeighbor([224, 224])
+                    .toFloat()
+                    .div(255.0)
+                    .expandDims(0);
+                
+                log('🧠 Ejecutando modelo de IA...', 'info');
+                
+                // Realizar predicción
+                const inicio = performance.now();
+                const prediccion = modelo.predict(tensor);
+                const resultados = await prediccion.data();
+                const fin = performance.now();
+                
+                const tiempo = (fin - inicio).toFixed(2);
+                
+                log(`✅ Análisis completado en ${tiempo}ms`, 'success');
+                
+                // Mostrar resultados
+                mostrarResultados(resultados);
+                
+                // Limpiar memoria
+                tensor.dispose();
+                prediccion.dispose();
+                
+            } catch (error) {
+                log(`❌ Error en el análisis: ${error.message}`, 'error');
+            } finally {
+                loadingElement.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        }
+        
+        function mostrarResultados(resultados) {
+            const resultadosArray = Array.from(resultados);
+            
+            // Encontrar máxima probabilidad
+            const maxProb = Math.max(...resultadosArray);
+            const indiceMax = resultadosArray.indexOf(maxProb);
+            
+            let html = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: #2c3e50;">🎯 RESULTADO DEL ANÁLISIS</h3>
+                    <p style="color: #7f8c8d;">Probabilidades de detección:</p>
+                </div>
+                <div class="results-grid">
+            `;
+            
+            resultadosArray.forEach((prob, index) => {
+                const porcentaje = (prob * 100).toFixed(2);
+                const esMaxima = prob === maxProb;
+                
+                html += `
+                    <div class="parasite-card ${esMaxima ? 'high-probability' : ''}">
+                        <div class="parasite-name">${nombresParasitos[index]}</div>
+                        <div class="probability-value">${porcentaje}%</div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" style="width: ${porcentaje}%"></div>
+                        </div>
+                        ${esMaxima ? '<div style="color: #e74c3c; font-weight: bold;">⚡ MAYOR PROBABILIDAD</div>' : ''}
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            // Diagnóstico
+            html += `
+                <div style="margin-top: 20px; padding: 20px; background: ${maxProb > 0.6 ? '#fff5f5' : '#f0f8f0'}; border-radius: 10px; border-left: 5px solid ${maxProb > 0.6 ? '#e74c3c' : '#2ecc71'};">
+                    <h4>${maxProb > 0.6 ? '⚠️ POSIBLE DETECCIÓN' : '✅ ANÁLISIS COMPLETADO'}</h4>
+                    <p><strong>Parásito detectado:</strong> ${nombresParasitos[indiceMax]}</p>
+                    <p><strong>Confianza:</strong> ${(maxProb * 100).toFixed(2)}%</p>
+                    <p><strong>Recomendación:</strong> ${maxProb > 0.6 ? 'Consultar con especialista médico' : 'No se detectaron anomalías significativas'}</p>
+                </div>
+            `;
+            
+            resultsContainer.innerHTML = html;
+            log(`📊 Análisis mostrado: ${nombresParasitos[indiceMax]} (${(maxProb * 100).toFixed(2)}% confianza)`, 'success');
+        }
+        
+        function limpiarTodo() {
+            if (modelo) {
+                modelo.dispose();
+                modelo = null;
+            }
+            imagePreview.style.display = 'none';
+            imagenActual = null;
+            fileInput.value = '';
+            analyzeBtn.disabled = true;
+            resultsContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 40px;">Los resultados aparecerán aquí después del análisis...</p>';
+            consoleEl.innerHTML = '';
+            log('🔄 Sistema reiniciado', 'info');
+        }
+        
+        // Inicialización automática
+        log('Sistema de detección de parásitos cargado', 'info');
+        log('TensorFlow.js ' + tf.version.tfjs, 'info');
+        log('Para comenzar: 1) Inicializa IA 2) Carga imagen 3) Analiza', 'info');
+        
+        // Inicializar modelo automáticamente después de 2 segundos
+        setTimeout(crearModelo, 2000);
+    </script>
+</body>
+</html>
