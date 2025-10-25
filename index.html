@@ -3,248 +3,381 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔬 Analizador de Parásitos con IA Avanzada</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+    <title>🔬 Sistema Educativo de Identificación de Parásitos</title>
     <style>
-        body { font-family: Arial; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
-        .app { max-width: 800px; margin: 0 auto; background: #2d2d2d; padding: 30px; border-radius: 15px; }
-        .header { text-align: center; background: linear-gradient(135deg, #e74c3c, #3498db); padding: 25px; border-radius: 10px; margin-bottom: 25px; }
-        .upload { border: 3px dashed #3498db; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0; cursor: pointer; transition: 0.3s; }
-        .upload:hover { background: #34495e; border-color: #e74c3c; }
-        .btn { background: #3498db; color: white; border: none; padding: 15px 25px; margin: 10px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn:hover { background: #2980b9; transform: scale(1.05); }
-        .btn:disabled { background: #7f8c8d; cursor: not-allowed; }
-        .btn-danger { background: #e74c3c; }
-        .btn-danger:hover { background: #c0392b; }
-        .preview { max-width: 300px; margin: 15px auto; border-radius: 8px; border: 2px solid #3498db; }
-        .results { display: none; margin-top: 20px; padding: 20px; background: #34495e; border-radius: 10px; }
-        .loading { color: #f39c12; font-weight: bold; }
-        .success { color: #2ecc71; }
-        .error { color: #e74c3c; }
-        .confidence { background: #2c3e50; padding: 10px; border-radius: 5px; margin: 10px 0; }
-        .progress-bar { width: 100%; height: 20px; background: #34495e; border-radius: 10px; overflow: hidden; margin: 10px 0; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #e74c3c, #f39c12, #2ecc71); transition: width 0.5s; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white; 
+            margin: 0; 
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .app { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: rgba(45, 45, 45, 0.95); 
+            padding: 30px; 
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .header { 
+            text-align: center; 
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 25px; 
+            border-radius: 15px; 
+            margin-bottom: 30px;
+            border: 3px solid #fff;
+        }
+        .upload { 
+            border: 3px dashed #3498db; 
+            padding: 40px; 
+            text-align: center; 
+            border-radius: 15px; 
+            margin: 25px 0; 
+            cursor: pointer;
+            background: rgba(52, 73, 94, 0.3);
+            transition: all 0.3s ease;
+        }
+        .upload:hover { 
+            background: rgba(52, 73, 94, 0.6); 
+            border-color: #e74c3c;
+            transform: scale(1.02);
+        }
+        .preview { 
+            max-width: 400px; 
+            margin: 20px auto; 
+            border-radius: 10px;
+            border: 3px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .manual-analysis { 
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            padding: 25px; 
+            border-radius: 15px; 
+            margin: 25px 0;
+            border: 2px solid #3498db;
+        }
+        .parasite-option { 
+            background: rgba(44, 62, 80, 0.8);
+            margin: 15px 0; 
+            padding: 20px; 
+            border-radius: 12px; 
+            cursor: pointer;
+            border-left: 5px solid #3498db;
+            transition: all 0.3s ease;
+        }
+        .parasite-option:hover { 
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            transform: translateX(10px);
+            border-left-color: #e74c3c;
+        }
+        .btn { 
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            margin: 10px; 
+            border-radius: 10px; 
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .btn:hover { 
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        .results { 
+            display: none; 
+            background: linear-gradient(135deg, #27ae60, #229954);
+            padding: 25px; 
+            border-radius: 15px; 
+            margin-top: 25px;
+            border: 3px solid #2ecc71;
+        }
+        .warning { 
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-top: 25px;
+            border: 2px solid #fff;
+            text-align: center;
+        }
+        .parasite-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            margin-right: 15px;
+            border: 2px solid #fff;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .info-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #f39c12;
+        }
     </style>
 </head>
 <body>
     <div class="app">
         <div class="header">
-            <h1>🔬 Analizador de Parásitos con IA</h1>
-            <p>Modelo avanzado MobileNet + Clasificación especializada</p>
+            <h1>🔬 SISTEMA EDUCATIVO DE PARÁSITOS INTESTINALES</h1>
+            <p>🎯 <strong>HERRAMIENTA EDUCATIVA PARA ESTUDIANTES DE MEDICINA</strong></p>
+            <p>📚 Identificación manual basada en características morfológicas reales</p>
         </div>
         
         <div class="upload" onclick="document.getElementById('fileInput').click()">
-            <h3>🖼️ HAZ CLIC PARA SUBIR IMAGEN</h3>
-            <p>Formatos: JPG, PNG, WEBP - Mínimo 224x224 píxeles</p>
+            <h3>🖼️ CARGAR IMAGEN MICROSCÓPICA</h3>
+            <p>📷 Tome foto de muestras fecales mediante microscopio (40x-100x)</p>
             <input type="file" id="fileInput" accept="image/*" style="display: none;">
             <div id="preview"></div>
         </div>
-        
-        <div style="text-align: center;">
-            <button class="btn" onclick="initAdvancedAI()">🧠 Inicializar IA Avanzada</button>
-            <button class="btn btn-danger" onclick="analyzeAdvanced()" id="analyzeBtn" disabled>🔍 Analizar Imagen</button>
+
+        <div class="manual-analysis">
+            <h3>🔍 IDENTIFICACIÓN MANUAL - SELECCIONE LO OBSERVADO:</h3>
+            <p><em>Basado en características morfológicas documentadas en literatura médica</em></p>
+            
+            <div class="parasite-option" onclick="selectParasite('Ascaris')">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #e74c3c; width: 80px; height: 40px; border-radius: 20px; margin-right: 15px;"></div>
+                    <div>
+                        <strong>🥚 ASCARIS LUMBRICOIDES</strong>
+                        <p>Huevo fértil: Ovalado, 45-75μm, cáscara gruesa mamelonada</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parasite-option" onclick="selectParasite('Entamoeba')">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #3498db; width: 40px; height: 40px; border-radius: 50%; margin-right: 15px;"></div>
+                    <div>
+                        <strong>🦠 ENTAMOEBA HISTOLYTICA</strong>
+                        <p>Quiste: Redondo, 10-20μm, 1-4 núcleos, cromatoides en forma de bastón</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parasite-option" onclick="selectParasite('Giardia')">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #f39c12; width: 60px; height: 30px; border-radius: 50% 0 50% 50%; margin-right: 15px;"></div>
+                    <div>
+                        <strong>🌀 GIARDIA LAMBLIA</strong>
+                        <p>Trofozoíto: Forma de pera, 10-12μm, 2 núcleos, 8 flagelos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parasite-option" onclick="selectParasite('Trichiuris')">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #9b59b6; width: 50px; height: 25px; border-radius: 25% 25% 25% 25%; margin-right: 15px;"></div>
+                    <div>
+                        <strong>📏 TRICHURIS TRICHIURA</strong>
+                        <p>Huevo: Forma de barril, 50-55μm, tapones polares transparentes</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parasite-option" onclick="selectParasite('Hymenolepis')">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #1abc9c; width: 40px; height: 40px; border-radius: 50%; margin-right: 15px;"></div>
+                    <div>
+                        <strong>⚪ HYMENOLEPIS NANA</strong>
+                        <p>Huevo: Esférico, 30-47μm, membranas concéntricas, oncosfera con 6 ganchos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parasite-option" onclick="selectParasite('Ninguno')" style="border-left-color: #27ae60;">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #27ae60; width: 60px; height: 60px; border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        ✅
+                    </div>
+                    <div>
+                        <strong>✅ MUESTRA NEGATIVA</strong>
+                        <p>No se observan formas parasitarias - Dentro de parámetros normales</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        
+
         <div id="results" class="results">
-            <h3>📊 Resultados del Análisis:</h3>
+            <h3>📊 INFORME DE IDENTIFICACIÓN:</h3>
             <div id="output"></div>
-            <div id="details"></div>
+        </div>
+
+        <div class="warning">
+            <h4>⚠️ DECLARACIÓN DE USO EDUCATIVO</h4>
+            <p><strong>Este sistema es exclusivamente para fines educativos y de entrenamiento.</strong></p>
+            <p>El diagnóstico médico real debe ser realizado por profesionales de la salud utilizando métodos de laboratorio certificados.</p>
+            <p>La identificación de parásitos requiere confirmación mediante técnicas de tinción y examen por personal calificado.</p>
         </div>
     </div>
 
     <script>
-        let model = null;
-        let image = null;
-        let isModelLoaded = false;
+        let currentImage = null;
         
-        // Parásitos comunes y sus características
-        const parasitesDB = {
-            'Ascaris': { 
-                confidence: 0, 
-                description: 'Gusano redondo - Huevos ovalados con cáscara gruesa',
-                symptoms: 'Dolor abdominal, náuseas, diarrea'
-            },
-            'Entamoeba': { 
-                confidence: 0, 
-                description: 'Protozoo - Quistes redondos con núcleos visibles',
-                symptoms: 'Disentería, dolor abdominal, fatiga'
-            },
-            'Giardia': { 
-                confidence: 0, 
-                description: 'Protozoo flagelado - Forma de pera con flagelos',
-                symptoms: 'Diarrea acuosa, calambres, gases'
-            },
-            'Hymenolepis': { 
-                confidence: 0, 
-                description: 'Tenena enana - Huevos esféricos con membranas',
-                symptoms: 'Dolor abdominal, pérdida de apetito'
-            },
-            'Trichiuris': { 
-                confidence: 0, 
-                description: 'Gusano látigo - Huevos en forma de barril',
-                symptoms: 'Dolor abdominal, diarrea, anemia'
-            }
-        };
-
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    image = new Image();
-                    image.onload = function() {
-                        document.getElementById('preview').innerHTML = '<img src="' + e.target.result + '" class="preview">';
-                        document.getElementById('analyzeBtn').disabled = !isModelLoaded;
-                        document.getElementById('output').innerHTML = '<p class="success">✅ Imagen cargada: ' + image.width + '×' + image.height + ' píxeles</p>';
+                    currentImage = new Image();
+                    currentImage.onload = function() {
+                        document.getElementById('preview').innerHTML = 
+                            '<h4>📸 Imagen cargada:</h4>' +
+                            '<img src="' + e.target.result + '" class="preview">' +
+                            '<p>Tamaño: ' + currentImage.width + '×' + currentImage.height + ' píxeles</p>';
                     };
-                    image.src = e.target.result;
+                    currentImage.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        async function initAdvancedAI() {
-            document.getElementById('output').innerHTML = '<p class="loading">🔄 Cargando modelo MobileNet (IA pre-entrenada)...</p>';
+        function selectParasite(parasite) {
+            const resultsDiv = document.getElementById('results');
+            const outputDiv = document.getElementById('output');
             
-            try {
-                // Cargar modelo pre-entrenado MobileNet
-                model = await mobilenet.load({
-                    version: 2,
-                    alpha: 1.0
-                });
-                
-                isModelLoaded = true;
-                document.getElementById('analyzeBtn').disabled = !image;
-                document.getElementById('output').innerHTML = '<p class="success">✅ IA Avanzada Cargada (MobileNet v2)</p>';
-                document.getElementById('output').innerHTML += '<p>🎯 Modelo pre-entrenado con 1.4M de imágenes</p>';
-                document.getElementById('results').style.display = 'block';
-                
-            } catch (error) {
-                document.getElementById('output').innerHTML = '<p class="error">❌ Error cargando IA: ' + error.message + '</p>';
-            }
-        }
-
-        async function analyzeAdvanced() {
-            if (!model || !image) {
-                alert('Primero carga la IA y una imagen');
-                return;
-            }
-
-            document.getElementById('output').innerHTML = '<p class="loading">🔍 Analizando imagen con IA avanzada...</p>';
-            
-            try {
-                // Realizar clasificación con el modelo pre-entrenado
-                const predictions = await model.classify(image);
-                
-                // Simular detección de parásitos basada en características de la imagen
-                simulateParasiteDetection(predictions);
-                
-            } catch (error) {
-                document.getElementById('output').innerHTML = '<p class="error">❌ Error en análisis: ' + error.message + '</p>';
-            }
-        }
-
-        function simulateParasiteDetection(predictions) {
-            // Resetear confianzas
-            Object.keys(parasitesDB).forEach(key => parasitesDB[key].confidence = 0);
-            
-            // Analizar características de las predicciones para detectar patrones de parásitos
-            const hasMicroscopicFeatures = predictions.some(p => 
-                p.className.toLowerCase().includes('microscope') || 
-                p.className.toLowerCase().includes('egg') ||
-                p.className.toLowerCase().includes('cell')
-            );
-            
-            const hasOrganicPatterns = predictions.some(p => 
-                p.className.toLowerCase().includes('organism') ||
-                p.className.toLowerCase().includes('worm') ||
-                p.className.toLowerCase().includes('bacteria')
-            );
-
-            // Generar detecciones simuladas más realistas
-            if (hasMicroscopicFeatures || hasOrganicPatterns) {
-                // Patrón más realista basado en características de imagen
-                let totalConfidence = 0;
-                
-                // Ascaris - alto si hay patrones ovalados/elongados
-                if (hasOrganicPatterns) {
-                    parasitesDB['Ascaris'].confidence = Math.min(0.85, 0.6 + Math.random() * 0.3);
-                    totalConfidence += parasitesDB['Ascaris'].confidence;
+            // Base de datos con información REAL de parásitos
+            const parasiteDatabase = {
+                'Ascaris': {
+                    nombre: 'Ascaris lumbricoides',
+                    tipo: 'Nematodo (gusano redondo)',
+                    tamaño: '45-75 μm (huevo fértil)',
+                    forma: 'Ovalado con cáscara mamelonada gruesa',
+                    color: 'Marrón dorado',
+                    tratamiento: 'Albendazol 400mg dosis única o Mebendazol 100mg 2 veces/día por 3 días',
+                    sintomas: 'Dolor abdominal, náuseas, diarrea, obstrucción intestinal en casos severos',
+                    diagnostico: 'Examen directo de heces, método de Kato-Katz',
+                    prevalencia: 'Más común en zonas tropicales con saneamiento deficiente'
+                },
+                'Entamoeba': {
+                    nombre: 'Entamoeba histolytica',
+                    tipo: 'Protozoo ameboide',
+                    tamaño: '10-20 μm (quiste)',
+                    forma: 'Quistes redondos con 1-4 núcleos',
+                    color: 'Transparente a verde pálido',
+                    tratamiento: 'Metronidazol 500-750mg 3 veces/día por 7-10 días + Paromomicina',
+                    sintomas: 'Disentería amebiana, dolor abdominal, fiebre, abscesos hepáticos',
+                    diagnostico: 'Examen microscópico, ELISA, PCR',
+                    prevalencia: 'Endémico en áreas tropicales'
+                },
+                'Giardia': {
+                    nombre: 'Giardia lamblia',
+                    tipo: 'Protozoo flagelado',
+                    tamaño: '10-12 μm (trofozoíto), 8-12 μm (quiste)',
+                    forma: 'Trofozoíto en forma de pera, quiste ovalado',
+                    color: 'Transparente',
+                    tratamiento: 'Metronidazol 250mg 3 veces/día por 5-7 días o Tinidazol 2g dosis única',
+                    sintomas: 'Diarrea acuosa, calambres abdominales, flatulencia, esteatorrea',
+                    diagnostico: 'Examen de heces, prueba de antígeno en heces',
+                    prevalencia: 'Mundial, brotes por agua contaminada'
+                },
+                'Trichiuris': {
+                    nombre: 'Trichuris trichiura',
+                    tipo: 'Nematodo (gusano látigo)',
+                    tamaño: '50-55 μm (huevo)',
+                    forma: 'Huevo en forma de barril con tapones polares',
+                    color: 'Marrón amarillento',
+                    tratamiento: 'Albendazol 400mg/día por 3 días o Mebendazol 100mg 2 veces/día por 3 días',
+                    sintomas: 'Dolor abdominal, diarrea, anemia, prolapso rectal en infecciones masivas',
+                    diagnostico: 'Examen directo de heces',
+                    prevalencia: 'Común en áreas tropicales húmedas'
+                },
+                'Hymenolepis': {
+                    nombre: 'Hymenolepis nana',
+                    tipo: 'Cestodo (tenia enana)',
+                    tamaño: '30-47 μm (huevo)',
+                    forma: 'Esférico con membranas concéntricas',
+                    color: 'Transparente',
+                    tratamiento: 'Praziquantel 25mg/kg dosis única',
+                    sintomas: 'Dolor abdominal, náuseas, diarrea, pérdida de peso',
+                    diagnostico: 'Examen microscópico de heces',
+                    prevalencia: 'Mundial, más común en niños'
+                },
+                'Ninguno': {
+                    nombre: 'Muestra Negativa',
+                    tipo: 'Sin hallazgos parasitológicos',
+                    tamaño: 'N/A',
+                    forma: 'N/A',
+                    color: 'N/A',
+                    tratamiento: 'No se requiere tratamiento antiparasitario',
+                    sintomas: 'Asintomático (respecto a parasitosis intestinal)',
+                    diagnostico: 'Muestra dentro de parámetros normales',
+                    prevalencia: 'N/A'
                 }
-                
-                // Entamoeba - medio para imágenes microscópicas
-                if (hasMicroscopicFeatures) {
-                    parasitesDB['Entamoeba'].confidence = Math.min(0.75, 0.4 + Math.random() * 0.35);
-                    totalConfidence += parasitesDB['Entamoeba'].confidence;
-                }
-                
-                // Distribuir confianza restante
-                Object.keys(parasitesDB).forEach(parasite => {
-                    if (parasitesDB[parasite].confidence === 0) {
-                        parasitesDB[parasite].confidence = (Math.random() * 0.3) * (1 - totalConfidence);
-                    }
-                });
-            } else {
-                // Si no hay características reconocibles, distribución más uniforme
-                Object.keys(parasitesDB).forEach(parasite => {
-                    parasitesDB[parasite].confidence = 0.1 + Math.random() * 0.2;
-                });
-            }
+            };
 
-            // Normalizar confianzas
-            const total = Object.values(parasitesDB).reduce((sum, p) => sum + p.confidence, 0);
-            Object.keys(parasitesDB).forEach(parasite => {
-                parasitesDB[parasite].confidence /= total;
-            });
-
-            displayResults();
-        }
-
-        function displayResults() {
-            // Encontrar el parásito con mayor confianza
-            const sortedParasites = Object.entries(parasitesDB)
-                .sort(([,a], [,b]) => b.confidence - a.confidence);
+            const info = parasiteDatabase[parasite];
             
-            const [mainParasite, mainData] = sortedParasites[0];
-            
-            let html = `
-                <div style="background: #2c3e50; padding: 20px; border-radius: 10px; margin: 15px 0;">
-                    <h4>🎯 PREDICCIÓN PRINCIPAL: ${mainParasite}</h4>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${mainData.confidence * 100}%"></div>
-                    </div>
-                    <p><strong>Confianza:</strong> ${(mainData.confidence * 100).toFixed(1)}%</p>
-                    <p><strong>Descripción:</strong> ${mainData.description}</p>
-                    <p><strong>Síntomas asociados:</strong> ${mainData.symptoms}</p>
-                </div>
-            `;
-            
-            // Mostrar todas las predicciones
-            html += '<h4>📈 TODAS LAS PREDICCIONES:</h4>';
-            sortedParasites.forEach(([parasite, data]) => {
-                html += `
-                    <div class="confidence">
-                        <strong>${parasite}:</strong> ${(data.confidence * 100).toFixed(1)}%
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${data.confidence * 100}%"></div>
-                        </div>
+            if (parasite === 'Ninguno') {
+                outputDiv.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+                        <h4>INFORME: MUESTRA NEGATIVA PARA PARÁSITOS</h4>
+                        <p><strong>Resultado:</strong> No se observan formas parasitarias en la muestra analizada</p>
+                        <p><strong>Interpretación:</strong> Dentro de parámetros normales</p>
+                        <p><strong>Recomendación:</strong> Continuar con hábitos de higiene preventivos</p>
                     </div>
                 `;
-            });
+            } else {
+                outputDiv.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🦠</div>
+                        <h4>INFORME: POSITIVO PARA ${info.nombre.toUpperCase()}</h4>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <strong>📏 Características Morfológicas</strong>
+                            <p><strong>Tipo:</strong> ${info.tipo}</p>
+                            <p><strong>Tamaño:</strong> ${info.tamaño}</p>
+                            <p><strong>Forma:</strong> ${info.forma}</p>
+                            <p><strong>Color:</strong> ${info.color}</p>
+                        </div>
+                        
+                        <div class="info-card">
+                            <strong>💊 Manejo Clínico</strong>
+                            <p><strong>Tratamiento:</strong> ${info.tratamiento}</p>
+                            <p><strong>Síntomas:</strong> ${info.sintomas}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <strong>🔬 Información Adicional</strong>
+                        <p><strong>Diagnóstico:</strong> ${info.diagnostico}</p>
+                        <p><strong>Prevalencia:</strong> ${info.prevalencia}</p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                        <strong>📝 Notas Importantes:</strong>
+                        <p>• Confirmar identificación con tinciones especiales (iodo, Kinyoun)</p>
+                        <p>• Considerar examen serológico para confirmación</p>
+                        <p>• Reportar a autoridades sanitarias si es requerido</p>
+                    </div>
+                `;
+            }
             
-            html += `
-                <div style="margin-top: 20px; padding: 15px; background: #16a085; border-radius: 8px;">
-                    <p><strong>💡 Nota:</strong> Este es un sistema de demostración. Para diagnóstico médico real, consulte con un profesional de la salud.</p>
-                </div>
-            `;
-            
-            document.getElementById('output').innerHTML = html;
-            document.getElementById('results').style.display = 'block';
+            resultsDiv.style.display = 'block';
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Inicializar automáticamente
-        setTimeout(initAdvancedAI, 1000);
+        // Mensaje educativo inicial
+        setTimeout(() => {
+            alert("🎓 BIENVENIDO/A AL SISTEMA EDUCATIVO DE PARÁSITOS
+
+Este sistema está diseñado para entrenamiento en identificación morfológica de parásitos intestinales.
+
+Recuerde: El diagnóstico real requiere confirmación por profesionales de la salud.");
+        }, 1000);
     </script>
 </body>
 </html>
