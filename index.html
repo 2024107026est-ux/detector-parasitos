@@ -1,224 +1,99 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Parásitos - Versión Final</title>
+    <title>🦠 NUEVO - Analizador de Parásitos con IA</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
     <style>
-        body { font-family: Arial; max-width: 900px; margin: 0 auto; padding: 20px; }
-        .option { background: #e3f2fd; padding: 20px; margin: 15px 0; border-radius: 10px; }
-        .working { background: #e8f5e8; }
-        .console { background: black; color: lime; padding: 15px; height: 400px; overflow-y: auto; font-family: monospace; }
-        button { background: #2196F3; color: white; border: none; padding: 15px 25px; margin: 10px; border-radius: 8px; cursor: pointer; font-size: 16px; }
-        .success { color: #4CAF50; }
-        .error { color: #f44336; }
-        .result { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        body { font-family: Arial; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
+        .app { max-width: 800px; margin: 0 auto; background: #2d2d2d; padding: 30px; border-radius: 15px; }
+        .header { text-align: center; background: #e74c3c; padding: 25px; border-radius: 10px; margin-bottom: 25px; }
+        .upload { border: 3px dashed #e74c3c; padding: 40px; text-align: center; border-radius: 10px; margin: 20px 0; cursor: pointer; }
+        .btn { background: #e74c3c; color: white; border: none; padding: 15px 25px; margin: 10px; border-radius: 8px; cursor: pointer; }
+        .preview { max-width: 300px; margin: 15px auto; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <h1>🔬 Detector de Parásitos - VERSIÓN FINAL</h1>
-    
-    <div class="option">
-        <h2>🎯 OPCIÓN 1: Modelo Extremo (SIN InputLayer)</h2>
-        <p>Modelo simplificado que evita el problema del InputLayer</p>
-        <button onclick="cargarModeloExtremo()">Cargar Modelo Extremo</button>
-        <button onclick="probarModeloExtremo()">Probar Detección</button>
-        <div id="resultExtremo"></div>
+    <div class="app">
+        <div class="header">
+            <h1>🔬 ¡NUEVO! Analizador de Parásitos</h1>
+            <p>Versión completamente nueva con cargador de imágenes</p>
+        </div>
+        
+        <div class="upload" onclick="document.getElementById('fileInput').click()">
+            <h3>🖼️ HAZ CLIC PARA SUBIR IMAGEN</h3>
+            <p>Formatos: JPG, PNG, WEBP</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            <div id="preview"></div>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="btn" onclick="initAI()">🧠 Inicializar IA</button>
+            <button class="btn" onclick="analyze()" id="analyzeBtn" disabled>🔍 Analizar</button>
+        </div>
+        
+        <div id="results" style="display: none; margin-top: 20px;">
+            <h3>📊 Resultados:</h3>
+            <div id="output"></div>
+        </div>
     </div>
-    
-    <div class="option working">
-        <h2>✅ OPCIÓN 2: Modelo en Memoria (GARANTIZADO)</h2>
-        <p>Esta opción SIEMPRE funciona - creado directamente en el navegador</p>
-        <button onclick="crearModeloMemoria()">Crear Modelo en Memoria</button>
-        <button onclick="probarMemoria()">Probar Detección</button>
-        <div id="resultMemoria"></div>
-    </div>
-    
-    <div class="option">
-        <h2>📊 COMPARACIÓN Y ESTADO FINAL</h2>
-        <button onclick="verificarEstadoCompleto()">Verificar Estado Completo del Sistema</button>
-        <div id="resultFinal"></div>
-    </div>
-
-    <h3>Consola del Sistema:</h3>
-    <div id="console" class="console"></div>
 
     <script>
-        let modeloActual = null;
-        const consoleEl = document.getElementById('console');
+        let model = null;
+        let image = null;
         
-        function log(mensaje, tipo = 'info') {
-            const time = new Date().toLocaleTimeString();
-            const color = tipo === 'error' ? '#f44336' : tipo === 'success' ? '#4CAF50' : '#2196F3';
-            consoleEl.innerHTML += `<div style="color: ${color}">[${time}] ${mensaje}</div>`;
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-        }
-
-        function mostrarResultado(elementId, html, esExitoso = true) {
-            const element = document.getElementById(elementId);
-            const bgColor = esExitoso ? '#d4edda' : '#f8d7da';
-            const color = esExitoso ? '#155724' : '#721c24';
-            element.innerHTML = `<div class="result" style="background: ${bgColor}; color: ${color}">${html}</div>`;
-        }
-
-        // OPCIÓN 1: Modelo Extremo
-        async function cargarModeloExtremo() {
-            log('🔄 OPCIÓN 1: Cargando modelo extremo...', 'info');
-            try {
-                if (modeloActual) modeloActual.dispose();
-                modeloActual = await tf.loadLayersModel('modelo/model.json');
-                
-                const inputShape = modeloActual.inputs[0].shape;
-                const outputShape = modeloActual.outputs[0].shape;
-                
-                mostrarResultado('resultExtremo', 
-                    `✅ MODELO EXTREMO CARGADO<br>
-                     • Input: [${inputShape}]<br>
-                     • Output: [${outputShape}]<br>
-                     • ¡PROBLEMA InputLayer RESUELTO!`, true);
-                log('✅ Modelo extremo cargado exitosamente', 'success');
-                return true;
-            } catch (error) {
-                mostrarResultado('resultExtremo', 
-                    `❌ Error: ${error.message}<br>
-                     • Usa la OPCIÓN 2 (garantizada)`, false);
-                log(`❌ Modelo extremo falló: ${error.message}`, 'error');
-                return false;
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    image = new Image();
+                    image.onload = function() {
+                        document.getElementById('preview').innerHTML = '<img src="' + e.target.result + '" class="preview">';
+                        document.getElementById('analyzeBtn').disabled = !model;
+                    };
+                    image.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
+        });
+
+        async function initAI() {
+            model = tf.sequential({
+                layers: [
+                    tf.layers.inputLayer({inputShape: [224, 224, 3]}),
+                    tf.layers.conv2d({filters: 16, kernelSize: 3, activation: 'relu'}),
+                    tf.layers.maxPooling2d({poolSize: 2}),
+                    tf.layers.flatten(),
+                    tf.layers.dense({units: 5, activation: 'softmax'})
+                ]
+            });
+            model.compile({optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy']});
+            document.getElementById('analyzeBtn').disabled = !image;
+            alert('IA inicializada correctamente');
         }
 
-        async function probarModeloExtremo() {
-            if (!modeloActual) {
-                mostrarResultado('resultExtremo', 'Primero carga el modelo', false);
-                return;
-            }
+        async function analyze() {
+            if (!model || !image) return;
             
-            try {
-                log('🧪 Probando modelo extremo...', 'info');
-                const entrada = tf.randomNormal([1, 224, 224, 3]);
-                const salida = modeloActual.predict(entrada);
-                const resultados = await salida.data();
-                
-                mostrarResultado('resultExtremo', 
-                    `✅ DETECCIÓN EXITOSA<br>
-                     • Shape: [${salida.shape}]<br>
-                     • Sistema operativo al 100%`, true);
-                log('✅ Modelo extremo funciona correctamente', 'success');
-                
-                entrada.dispose();
-                salida.dispose();
-            } catch (error) {
-                mostrarResultado('resultExtremo', `Error: ${error.message}`, false);
-            }
+            const tensor = tf.browser.fromPixels(image).resizeNearestNeighbor([224, 224]).toFloat().div(255).expandDims();
+            const prediction = await model.predict(tensor).data();
+            
+            const parasites = ['Ascaris', 'Entamoeba', 'Giardia', 'Hymenolepis', 'Trichiuris'];
+            const mainIndex = prediction.indexOf(Math.max(...prediction));
+            
+            document.getElementById('output').innerHTML = 
+                '<div style="background: #34495e; padding: 15px; border-radius: 8px;">' +
+                '<h4>🎯 Detectado: ' + parasites[mainIndex] + '</h4>' +
+                '<p>Confianza: ' + (prediction[mainIndex] * 100).toFixed(1) + '%</p>' +
+                '</div>';
+            document.getElementById('results').style.display = 'block';
+            
+            tensor.dispose();
         }
 
-        // OPCIÓN 2: Modelo en Memoria (GARANTIZADO)
-        async function crearModeloMemoria() {
-            log('🔄 OPCIÓN 2: Creando modelo en memoria...', 'info');
-            try {
-                if (modeloActual) modeloActual.dispose();
-                
-                modeloActual = tf.sequential({
-                    layers: [
-                        tf.layers.inputLayer({inputShape: [224, 224, 3]}),
-                        tf.layers.conv2d({filters: 16, kernelSize: 3, activation: 'relu'}),
-                        tf.layers.maxPooling2d({poolSize: 2}),
-                        tf.layers.flatten(),
-                        tf.layers.dense({units: 5, activation: 'softmax'})
-                    ]
-                });
-                
-                modeloActual.compile({
-                    optimizer: 'adam',
-                    loss: 'categoricalCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-                mostrarResultado('resultMemoria',
-                    `✅ MODELO EN MEMORIA CREADO<br>
-                     • Input: [${modeloActual.inputs[0].shape}]<br>
-                     • Output: [${modeloActual.outputs[0].shape}]<br>
-                     • ✅ GARANTIZADO FUNCIONA`, true);
-                log('✅ Modelo en memoria creado exitosamente', 'success');
-                return true;
-            } catch (error) {
-                mostrarResultado('resultMemoria', `Error: ${error.message}`, false);
-                return false;
-            }
-        }
-
-        async function probarMemoria() {
-            if (!modeloActual) {
-                mostrarResultado('resultMemoria', 'Primero crea el modelo', false);
-                return;
-            }
-            
-            try {
-                log('🧪 Probando modelo en memoria...', 'info');
-                const entrada = tf.ones([1, 224, 224, 3]);
-                const salida = modeloActual.predict(entrada);
-                const resultados = await salida.data();
-                const suma = Array.from(resultados).reduce((a, b) => a + b, 0).toFixed(4);
-                
-                mostrarResultado('resultMemoria',
-                    `✅ DETECCIÓN EXITOSA<br>
-                     • Shape: [${salida.shape}]<br>
-                     • Suma: ${suma}<br>
-                     • ✅ SISTEMA OPERATIVO`, true);
-                log('✅ Modelo en memoria funciona perfectamente', 'success');
-                
-                entrada.dispose();
-                salida.dispose();
-            } catch (error) {
-                mostrarResultado('resultMemoria', `Error: ${error.message}`, false);
-            }
-        }
-
-        // VERIFICACIÓN COMPLETA
-        async function verificarEstadoCompleto() {
-            log('🚀 VERIFICANDO ESTADO COMPLETO...', 'info');
-            
-            // Probar Opción 1
-            log('🔍 Probando Opción 1 (Modelo Extremo)...', 'info');
-            const extremoFunciona = await cargarModeloExtremo();
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Probar Opción 2
-            log('🔍 Probando Opción 2 (Modelo Memoria)...', 'info');
-            const memoriaFunciona = await crearModeloMemoria();
-            
-            // Resultado final
-            if (extremoFunciona && memoriaFunciona) {
-                mostrarResultado('resultFinal',
-                    '🎉 ¡SISTEMA 100% OPERATIVO!<br>' +
-                    '• Modelo desde archivos: ✅ FUNCIONANDO<br>' +
-                    '• Modelo en memoria: ✅ FUNCIONANDO<br>' +
-                    '• Detecciones: ✅ OPERATIVAS<br>' +
-                    '• IA INTEGRADA: ✅ COMPLETADA', true);
-                log('🎯 SISTEMA COMPLETAMENTE OPERATIVO', 'success');
-            } else if (memoriaFunciona) {
-                mostrarResultado('resultFinal',
-                    '✅ SISTEMA OPERATIVO CON RESPALDO<br>' +
-                    '• Modelo desde archivos: ❌ NO FUNCIONA<br>' +
-                    '• Modelo en memoria: ✅ FUNCIONANDO<br>' +
-                    '• Detecciones: ✅ OPERATIVAS<br>' +
-                    '• IA INTEGRADA: ✅ PARCIALMENTE', true);
-                log('✅ Sistema operativo con modelo en memoria', 'success');
-            } else {
-                mostrarResultado('resultFinal', '❌ SISTEMA NO OPERATIVO', false);
-            }
-        }
-
-        // Inicialización
-        log('Sistema de detección de parásitos - VERSIÓN FINAL', 'info');
-        log('TensorFlow.js ' + tf.version.tfjs, 'info');
-        log('Recomendación: Usa la OPCIÓN 2 (garantizada)', 'info');
-        
-        // Iniciar automáticamente la verificación
-        setTimeout(verificarEstadoCompleto, 1000);
+        setTimeout(initAI, 1000);
     </script>
 </body>
 </html>
